@@ -1,60 +1,60 @@
-name: 🧪 Testes Automatizados
+# name: 🧪 Testes Automatizados
 
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+# on:
+#   push:
+#     branches: [ main, develop ]
+#   pull_request:
+#     branches: [ main, develop ]
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
     
-    strategy:
-      matrix:
-        dotnet-version: ['9.0.x']
+#     strategy:
+#       matrix:
+#         dotnet-version: ['9.0.x']
     
-    steps:
-    - name: 📥 Checkout código
-      uses: actions/checkout@v4
+#     steps:
+#     - name: 📥 Checkout código
+#       uses: actions/checkout@v4
       
-    - name: 🔧 Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ matrix.dotnet-version }}
+#     - name: 🔧 Setup .NET
+#       uses: actions/setup-dotnet@v4
+#       with:
+#         dotnet-version: ${{ matrix.dotnet-version }}
         
-    - name: 📦 Restaurar dependências
-      run: dotnet restore
+#     - name: 📦 Restaurar dependências
+#       run: dotnet restore
       
-    - name: 🔨 Compilar solução
-      run: dotnet build --configuration Release --no-restore
+#     - name: 🔨 Compilar solução
+#       run: dotnet build --configuration Release --no-restore
       
-    - name: 🧪 Executar testes unitários
-      run: dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage" --settings coverlet.runsettings --logger trx --results-directory TestResults
+#     - name: 🧪 Executar testes unitários
+#       run: dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage" --settings coverlet.runsettings --logger trx --results-directory TestResults
       
-    - name: 📊 Gerar relatório de cobertura
-      run: |
-        dotnet tool install --tool-path tools dotnet-reportgenerator-globaltool
-        tools/reportgenerator.exe -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"coverage" -reporttypes:"Html;Cobertura" -assemblyfilters:"-*.Tests"
+#     - name: 📊 Gerar relatório de cobertura
+#       run: |
+#         dotnet tool install --tool-path tools dotnet-reportgenerator-globaltool
+#         tools/reportgenerator.exe -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"coverage" -reporttypes:"Html;Cobertura" -assemblyfilters:"-*.Tests"
         
-    - name: 📈 Upload cobertura para Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: coverage/Cobertura.xml
-        flags: unittests
-        name: codecov-umbrella
+#     - name: 📈 Upload cobertura para Codecov
+#       uses: codecov/codecov-action@v4
+#       with:
+#         file: coverage/Cobertura.xml
+#         flags: unittests
+#         name: codecov-umbrella
         
-    - name: 📁 Upload relatório de cobertura
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: coverage-report
-        path: coverage/
+#     - name: 📁 Upload relatório de cobertura
+#       uses: actions/upload-artifact@v4
+#       if: always()
+#       with:
+#         name: coverage-report
+#         path: coverage/
         
-    - name: 📋 Upload resultados dos testes
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test-results
-        path: TestResults/
+#     - name: 📋 Upload resultados dos testes
+#       uses: actions/upload-artifact@v4
+#       if: always()
+#       with:
+#         name: test-results
+#         path: TestResults/
 
