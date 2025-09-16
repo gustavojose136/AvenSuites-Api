@@ -67,4 +67,9 @@ public class RoleRepository : IRoleRepository
     {
         return await _context.Roles.AnyAsync(r => r.Id == id && r.IsActive);
     }
+
+    public async Task<bool> ExistsByNameAsync(string name)
+    {
+        return await _context.Roles.AnyAsync(r => r.Name == name && r.IsActive);
+    }
 }

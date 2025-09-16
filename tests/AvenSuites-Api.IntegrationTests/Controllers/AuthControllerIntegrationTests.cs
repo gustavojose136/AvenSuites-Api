@@ -65,7 +65,7 @@ public class AuthControllerIntegrationTests : IClassFixture<WebApplicationFactor
         
         result.GetProperty("name").GetString().Should().Be(registerRequest.Name);
         result.GetProperty("email").GetString().Should().Be(registerRequest.Email);
-        result.GetProperty("roles").GetArray().Should().NotBeEmpty();
+        result.GetProperty("roles").GetArrayLength().Should().BeGreaterThan(0);
     }
 
     [Fact]

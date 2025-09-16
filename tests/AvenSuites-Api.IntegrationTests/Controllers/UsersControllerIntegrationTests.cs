@@ -95,7 +95,7 @@ public class UsersControllerIntegrationTests : IClassFixture<WebApplicationFacto
         
         var content = await response.Content.ReadAsStringAsync();
         var result = JsonSerializer.Deserialize<JsonElement>(content);
-        result.GetArray().Should().NotBeEmpty();
+        result.GetArrayLength().Should().BeGreaterThan(0);
     }
 
     [Fact]

@@ -28,9 +28,11 @@ public class AuthService : IAuthService
         if (user == null || !user.IsActive)
             return null;
 
+        string hash = Argon2PasswordHasher.HashPassword("Admin123!");
+
         if (!Argon2PasswordHasher.VerifyPassword(request.Password, user.PasswordHash))
             return null;
-
+            
         var token = _jwtService.GenerateToken(user);
         var expiresAt = DateTime.UtcNow.AddHours(24); // Default 24 hours
 

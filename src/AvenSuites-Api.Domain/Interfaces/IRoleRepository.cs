@@ -11,4 +11,5 @@ public interface IRoleRepository
     Task<Role> UpdateAsync(Role role);
     Task DeleteAsync(Guid id);
     Task<bool> ExistsAsync(Guid id);
+    Task<bool> ExistsByNameAsync(string name);
 }
