@@ -104,11 +104,17 @@ public class RoomService : IRoomService
 
     public async Task<IEnumerable<RoomAvailabilityResponse>> CheckAvailabilityAsync(RoomAvailabilityRequest request)
     {
-        var availableRooms = await _roomRepository.GetAvailableRoomsAsync(
+        // Usar método melhorado que verifica disponibilidade real
+        var availableRooms = await _roomRepository.GetAvailableRoomsForPeriodAsync(
             request.HotelId,
             request.CheckInDate,
             request.CheckOutDate,
             request.RoomTypeId);
+
+        // Filtrar por capacidade
+        availableRooms = availableRooms.Where(r => 
+            r.RoomType.CapacityAdults >= request.Adults &&
+            r.RoomType.CapacityChildren >= request.Children);
 
         return availableRooms.Select(room => new RoomAvailabilityResponse
         {

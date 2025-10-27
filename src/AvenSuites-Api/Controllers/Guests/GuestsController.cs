@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AvenSuitesApi.Application.DTOs.Guest;
 using AvenSuitesApi.Application.Services.Interfaces;
@@ -5,6 +6,7 @@ using AvenSuitesApi.Application.Services.Interfaces;
 namespace AvenSuitesApi.Controllers.Guests;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class GuestsController : ControllerBase
 {

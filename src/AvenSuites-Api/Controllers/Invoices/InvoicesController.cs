@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AvenSuitesApi.Application.DTOs.Invoice;
 using AvenSuitesApi.Application.Services.Interfaces;
@@ -5,6 +6,7 @@ using AvenSuitesApi.Application.Services.Interfaces;
 namespace AvenSuitesApi.Controllers.Invoices;
 
 [ApiController]
+[Authorize]
 [Route("api/invoices")]
 public class InvoicesController : ControllerBase
 {

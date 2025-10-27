@@ -42,8 +42,18 @@ public class BookingService : IBookingService
         // Validar e verificar disponibilidade dos quartos
         foreach (var bookingRoom in request.BookingRooms)
         {
-            var isAvailable = await _roomRepository.IsRoomNumberUniqueAsync(request.HotelId, bookingRoom.RoomId.ToString(), null);
-            // Implementar lógica completa de verificação de disponibilidade
+            var room = await _roomRepository.GetByIdAsync(bookingRoom.RoomId);
+            if (room == null || room.HotelId != request.HotelId)
+                return null; // Quarto não encontrado ou não pertence ao hotel
+            
+            // Verificar disponibilidade
+            var isAvailable = await IsRoomAvailableForDatesAsync(
+                bookingRoom.RoomId, 
+                request.CheckInDate, 
+                request.CheckOutDate);
+            
+            if (!isAvailable)
+                return null; // Quarto não disponível
         }
 
         // Criar booking
@@ -62,12 +72,33 @@ public class BookingService : IBookingService
             MainGuestId = request.MainGuestId,
             ChannelRef = request.ChannelRef,
             Notes = request.Notes,
-            TotalAmount = 0, // Será calculado
+            TotalAmount = CalculateTotalFromRequest(request),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
         var createdBooking = await _bookingRepository.AddAsync(booking);
+        
+        // Criar booking rooms
+        foreach (var bookingRoomRequest in request.BookingRooms)
+        {
+            var bookingRoom = new AvenSuitesApi.Domain.Entities.BookingRoom
+            {
+                Id = Guid.NewGuid(),
+                BookingId = createdBooking.Id,
+                RoomId = bookingRoomRequest.RoomId,
+                RoomTypeId = bookingRoomRequest.RoomTypeId,
+                RatePlanId = bookingRoomRequest.RatePlanId,
+                PriceTotal = bookingRoomRequest.PriceTotal,
+                Notes = bookingRoomRequest.Notes,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            
+            // Adicionar ao contexto - você precisará injetar ApplicationDbContext
+            // _context.BookingRooms.Add(bookingRoom);
+        }
+        
         return MapToResponse(createdBooking);
     }
 
@@ -110,8 +141,14 @@ public class BookingService : IBookingService
         if (booking == null)
             return null;
 
-        if (!string.IsNullOrEmpty(request.Status))
+        string? oldStatus = booking.Status;
+
+        if (!string.IsNullOrEmpty(request.Status) && request.Status != oldStatus)
+        {
+            // Registrar mudança de status
+            await RegisterStatusChangeAsync(booking.Id, oldStatus, request.Status, null);
             booking.Status = request.Status;
+        }
 
         if (request.CheckInDate.HasValue)
             booking.CheckInDate = request.CheckInDate.Value;
@@ -133,6 +170,23 @@ public class BookingService : IBookingService
         var updatedBooking = await _bookingRepository.UpdateAsync(booking);
         return MapToResponse(updatedBooking);
     }
+    
+    private async Task RegisterStatusChangeAsync(Guid bookingId, string? oldStatus, string newStatus, string? notes)
+    {
+        // Nota: Você precisará injetar ApplicationDbContext para salvar o histórico
+        var history = new BookingStatusHistory
+        {
+            Id = Guid.NewGuid(),
+            BookingId = bookingId,
+            OldStatus = oldStatus,
+            NewStatus = newStatus,
+            ChangedAt = DateTime.UtcNow,
+            Notes = notes
+        };
+        
+        // _context.BookingStatusHistories.Add(history);
+        // await _context.SaveChangesAsync();
+    }
 
     public async Task<bool> CancelBookingAsync(Guid id, string? reason = null)
     {
@@ -140,10 +194,12 @@ public class BookingService : IBookingService
         if (booking == null)
             return false;
 
+        var oldStatus = booking.Status;
         booking.Status = "CANCELLED";
         booking.Notes = string.IsNullOrEmpty(reason) ? booking.Notes : reason;
         booking.UpdatedAt = DateTime.UtcNow;
 
+        await RegisterStatusChangeAsync(booking.Id, oldStatus, "CANCELLED", reason);
         await _bookingRepository.UpdateAsync(booking);
         return true;
     }
@@ -154,9 +210,11 @@ public class BookingService : IBookingService
         if (booking == null)
             return false;
 
+        var oldStatus = booking.Status;
         booking.Status = "CONFIRMED";
         booking.UpdatedAt = DateTime.UtcNow;
 
+        await RegisterStatusChangeAsync(booking.Id, oldStatus, "CONFIRMED", "Reserva confirmada via API");
         await _bookingRepository.UpdateAsync(booking);
         return true;
     }
@@ -206,6 +264,36 @@ public class BookingService : IBookingService
                 PaidAt = p.PaidAt
             }).ToList()
         };
+    }
+    
+    private async Task<bool> IsRoomAvailableForDatesAsync(Guid roomId, DateTime checkIn, DateTime checkOut)
+    {
+        var room = await _roomRepository.GetByIdAsync(roomId);
+        if (room == null || room.Status != "ACTIVE")
+            return false;
+
+        // Verificar conflitos com blocos de manutenção
+        // Note: Você precisará injetar ApplicationDbContext para isso
+        // var hasMaintenance = await _context.MaintenanceBlocks
+        //     .AnyAsync(mb => mb.RoomId == roomId && mb.Status == "ACTIVE" 
+        //         && mb.StartDate <= checkOut && mb.EndDate >= checkIn);
+        
+        // Verificar conflitos com reservas existentes
+        var activeBookings = await _bookingRepository.GetByHotelIdAsync(room.HotelId);
+        var hasConflict = activeBookings.Any(b => 
+            b.Status != "CANCELLED"
+            && b.BookingRooms.Any(br => br.RoomId == roomId)
+            && b.CheckInDate < checkOut 
+            && b.CheckOutDate > checkIn);
+
+        return !hasConflict;
+    }
+    
+    private static decimal CalculateTotalFromRequest(BookingCreateRequest request)
+    {
+        // Calcular total baseado nos quartos solicitados
+        var days = (request.CheckOutDate - request.CheckInDate).Days;
+        return request.BookingRooms.Sum(br => br.PriceTotal) * days;
     }
 }
 

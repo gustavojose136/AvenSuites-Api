@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AvenSuitesApi.Application.DTOs.Room;
 using AvenSuitesApi.Application.Services.Interfaces;
@@ -5,6 +6,7 @@ using AvenSuitesApi.Application.Services.Interfaces;
 namespace AvenSuitesApi.Controllers.Rooms;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class RoomTypesController : ControllerBase
 {

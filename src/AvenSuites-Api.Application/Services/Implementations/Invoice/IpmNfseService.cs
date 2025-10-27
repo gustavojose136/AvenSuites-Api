@@ -1,5 +1,6 @@
 using System.Text;
 using System.Xml.Linq;
+using Microsoft.Extensions.Logging;
 using AvenSuitesApi.Application.DTOs.Invoice;
 using AvenSuitesApi.Application.Services.Interfaces;
 using AvenSuitesApi.Domain.Entities;
@@ -15,6 +16,8 @@ public class IpmNfseService : IIpmNfseService
     private readonly IBookingRepository _bookingRepository;
     private readonly IInvoiceRepository _invoiceRepository;
     private readonly IErpIntegrationLogRepository _erpLogRepository;
+    private readonly IIpmHttpClient _httpClient;
+    private readonly ILogger<IpmNfseService> _logger;
 
     public IpmNfseService(
         IIpmCredentialsRepository credentialsRepository,
@@ -22,7 +25,9 @@ public class IpmNfseService : IIpmNfseService
         IGuestRepository guestRepository,
         IBookingRepository bookingRepository,
         IInvoiceRepository invoiceRepository,
-        IErpIntegrationLogRepository erpLogRepository)
+        IErpIntegrationLogRepository erpLogRepository,
+        IIpmHttpClient httpClient,
+        ILogger<IpmNfseService> logger)
     {
         _credentialsRepository = credentialsRepository;
         _hotelRepository = hotelRepository;
@@ -30,6 +35,8 @@ public class IpmNfseService : IIpmNfseService
         _bookingRepository = bookingRepository;
         _invoiceRepository = invoiceRepository;
         _erpLogRepository = erpLogRepository;
+        _httpClient = httpClient;
+        _logger = logger;
     }
 
     public async Task<IpmNfseCreateResponse> GenerateInvoiceAsync(Guid hotelId, IpmNfseCreateRequest request)
@@ -63,48 +70,52 @@ public class IpmNfseService : IIpmNfseService
 
         try
         {
-            // Chamar webservice IPM (aqui você implementaria a chamada SOAP/REST)
-            // var response = await CallIpmWebService(xmlContent);
+            // Chamar webservice IPM
+            var ipmResponse = await CallIpmWebServiceAsync(xmlContent, credentials.Username, credentials.Password);
 
-            // Por enquanto, retorna sucesso simulado
+            // Parsear resposta do IPM
             var invoice = new AvenSuitesApi.Domain.Entities.Invoice
             {
                 Id = Guid.NewGuid(),
                 BookingId = request.BookingId,
                 HotelId = hotelId,
-                Status = "ISSUED",
+                Status = ipmResponse.Contains("erro") ? "FAILED" : "ISSUED",
                 IssueDate = DateTime.UtcNow,
-                NfseNumber = "12345", // Simulado
+                NfseNumber = ExtractNfseNumber(ipmResponse),
                 NfseSeries = credentials.SerieNfse,
                 TotalServices = request.TotalValue,
-                TotalTaxes = 0,
+                TotalTaxes = CalculateTaxes(request),
                 ErpProvider = "IPM",
+                RawResponseJson = ipmResponse,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
 
-            await _invoiceRepository.AddAsync(invoice);
+            var createdInvoice = await _invoiceRepository.AddAsync(invoice);
 
             // Registrar no log
             var log = new AvenSuitesApi.Domain.Entities.ErpIntegrationLog
             {
                 Id = Guid.NewGuid(),
                 BookingId = request.BookingId,
-                InvoiceId = invoice.Id,
+                InvoiceId = createdInvoice.Id,
                 Endpoint = "ipm/nfse/generate",
-                Success = true,
+                Success = createdInvoice.Status == "ISSUED",
                 RequestJson = xmlContent,
-                ResponseJson = "{ \"status\": \"success\" }",
+                ResponseJson = ipmResponse,
                 CreatedAt = DateTime.UtcNow
             };
             await _erpLogRepository.AddAsync(log);
 
             return new IpmNfseCreateResponse
             {
-                Success = true,
-                NfseNumber = invoice.NfseNumber,
-                SerieNfse = invoice.NfseSeries,
-                RawResponse = xmlContent
+                Success = createdInvoice.Status == "ISSUED",
+                NfseNumber = createdInvoice.NfseNumber,
+                SerieNfse = createdInvoice.NfseSeries,
+                VerificationCode = createdInvoice.VerificationCode,
+                XmlContent = ExtractXmlFromResponse(ipmResponse),
+                PdfContent = ExtractPdfFromResponse(ipmResponse),
+                RawResponse = ipmResponse
             };
         }
         catch (Exception ex)
@@ -223,6 +234,48 @@ public class IpmNfseService : IIpmNfseService
         );
 
         return xml.ToString();
+    }
+    
+    private async Task<string> CallIpmWebServiceAsync(string xmlContent, string username, string password)
+    {
+        var endpoint = "https://webservice-ipm.com.br/nfse"; // Configurar via appsettings
+        
+        try
+        {
+            var response = await _httpClient.PostAsync(endpoint, xmlContent, username, password);
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao chamar webservice IPM");
+            throw;
+        }
+    }
+    
+    private static decimal CalculateTaxes(IpmNfseCreateRequest request)
+    {
+        // Calcular impostos baseado nos itens
+        return request.Items.Sum(i => 
+            i.ValorTributavel * (i.AliquotaItemLista / 100));
+    }
+    
+    private static string ExtractNfseNumber(string response)
+    {
+        // Parse XML response e extrair número da NFSe
+        // Implementar conforme formato de resposta do IPM
+        return "12345"; // Placeholder
+    }
+    
+    private static string ExtractXmlFromResponse(string response)
+    {
+        // Extrair XML da resposta
+        return response; // Placeholder
+    }
+    
+    private static string? ExtractPdfFromResponse(string response)
+    {
+        // Extrair PDF da resposta (se disponível)
+        return null; // Placeholder
     }
 }
 

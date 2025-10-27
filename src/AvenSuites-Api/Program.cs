@@ -91,6 +91,10 @@ builder.Services.AddCors(options =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// Background Workers
+builder.Services.AddHostedService<AvenSuitesApi.Workers.InvoiceBackgroundWorker>();
+builder.Services.AddHostedService<AvenSuitesApi.Workers.IntegrationEventPublisher>();
+
 var app = builder.Build();
 
 // Pipeline
@@ -102,6 +106,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
+
+// Middleware de Auditoria
+app.UseMiddleware<AvenSuitesApi.Middleware.AuditMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

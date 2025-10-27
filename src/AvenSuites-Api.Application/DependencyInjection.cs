@@ -6,6 +6,7 @@ using AvenSuitesApi.Application.Services.Implementations.Room;
 using AvenSuitesApi.Application.Services.Implementations.Guest;
 using AvenSuitesApi.Application.Services.Implementations.Hotel;
 using AvenSuitesApi.Application.Services.Implementations.Invoice;
+using IpmNfse = AvenSuitesApi.Application.Services.Implementations.Invoice;
 
 namespace AvenSuitesApi.Application;
 
@@ -24,7 +25,8 @@ public static class DependencyInjection
         services.AddScoped<IGuestService, GuestService>();
         services.AddScoped<IHotelService, HotelService>();
         services.AddScoped<IIpmNfseService, IpmNfseService>();
-
+        services.AddScoped<IInvoiceService, InvoiceService>();
+        
         return services;
     }
 }

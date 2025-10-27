@@ -8,6 +8,7 @@ public interface IRoomRepository
     Task<Room?> GetByIdWithDetailsAsync(Guid id);
     Task<IEnumerable<Room>> GetByHotelIdAsync(Guid hotelId);
     Task<IEnumerable<Room>> GetAvailableRoomsAsync(Guid hotelId, DateTime startDate, DateTime endDate, Guid? roomTypeId = null);
+    Task<IEnumerable<Room>> GetAvailableRoomsForPeriodAsync(Guid hotelId, DateTime startDate, DateTime endDate, Guid? roomTypeId = null);
     Task<IEnumerable<Room>> GetByStatusAsync(Guid hotelId, string status);
     Task<Room> AddAsync(Room room);
     Task<Room> UpdateAsync(Room room);

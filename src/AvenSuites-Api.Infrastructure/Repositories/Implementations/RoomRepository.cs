@@ -125,5 +125,29 @@ public class RoomRepository : IRoomRepository
 
         return !hasBooking;
     }
+    
+    public async Task<IEnumerable<Room>> GetAvailableRoomsForPeriodAsync(
+        Guid hotelId, DateTime startDate, DateTime endDate, Guid? roomTypeId = null)
+    {
+        var query = _context.Rooms
+            .Include(r => r.RoomType)
+            .Where(r => r.HotelId == hotelId && r.Status == "ACTIVE");
+
+        if (roomTypeId.HasValue)
+            query = query.Where(r => r.RoomTypeId == roomTypeId.Value);
+
+        var rooms = await query.ToListAsync();
+        
+        var availableRooms = new List<Room>();
+        
+        foreach (var room in rooms)
+        {
+            var isAvailable = await IsRoomAvailableAsync(room.Id, startDate, endDate);
+            if (isAvailable)
+                availableRooms.Add(room);
+        }
+
+        return availableRooms;
+    }
 }
 
