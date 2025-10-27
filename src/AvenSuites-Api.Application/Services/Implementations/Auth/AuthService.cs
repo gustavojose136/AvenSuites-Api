@@ -28,8 +28,6 @@ public class AuthService : IAuthService
         if (user == null || !user.IsActive)
             return null;
 
-        string hash = Argon2PasswordHasher.HashPassword("Admin123!");
-
         if (!Argon2PasswordHasher.VerifyPassword(request.Password, user.PasswordHash))
             return null;
             
