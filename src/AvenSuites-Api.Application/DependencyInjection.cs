@@ -27,6 +27,9 @@ public static class DependencyInjection
         services.AddScoped<IIpmNfseService, IpmNfseService>();
         services.AddScoped<IInvoiceService, InvoiceService>();
         
+        // IPM HTTP Client
+        services.AddHttpClient<IIpmHttpClient, IpmHttpClient>();
+        
         return services;
     }
 }
