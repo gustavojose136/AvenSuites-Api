@@ -4,6 +4,7 @@ using AvenSuitesApi.Infrastructure.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AvenSuitesApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251029143523_FixNotificationLogAndNeighborhood")]
+    partial class FixNotificationLogAndNeighborhood
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1020,7 +1023,7 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                             CpfCnpj = "83.630.657/0001-60",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             HotelId = new Guid("7a326969-3bf6-40d9-96dc-1aecef585000"),
-                            Password = "CS/JwbaBnkcrQ3fIllj06LcDydW/WPNN2CXmSeqpnFo=",
+                            Password = "+/vCNIXj9LVGf/r+3MHpHl9tbvqrb8KD9pjv90XUyE8=",
                             SerieNfse = "1",
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Username = "83.630.657/0001-60"
@@ -1273,17 +1276,9 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                         {
                             Id = new Guid("60ccaec1-6c42-4fb5-a104-2036b42585a3"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Administrator role with full access to all hotels",
+                            Description = "Administrator role with full access",
                             IsActive = true,
                             Name = "Admin"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Hotel administrator role with access to specific hotel only",
-                            IsActive = true,
-                            Name = "Hotel-Admin"
                         },
                         new
                         {
@@ -1476,9 +1471,6 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                     b.Property<Guid?>("HotelId")
                         .HasColumnType("char(36)");
 
-                    b.Property<Guid?>("HotelId1")
-                        .HasColumnType("char(36)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
@@ -1501,8 +1493,6 @@ namespace AvenSuitesApi.Infrastructure.Migrations
 
                     b.HasIndex("HotelId");
 
-                    b.HasIndex("HotelId1");
-
                     b.ToTable("Users");
 
                     b.HasData(
@@ -1513,17 +1503,16 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                             Email = "admin@avensuites.com",
                             IsActive = true,
                             Name = "Administrator",
-                            PasswordHash = "$argon2i$v=19$m=4096,t=2,p=2$+EyurGTivmXDu42GtNem+w$xp/S+Do2ko5jQ3xebkuPFPwsstewOqL6M7wBRhOZ7hY"
+                            PasswordHash = "$argon2i$v=19$m=4096,t=2,p=2$3GTVAVhtVdcEp8P9tffgKQ$rdQQ3UieMry24VbryjGrXjqMxFz6saq4c+Zy4Hv1nqM"
                         },
                         new
                         {
                             Id = new Guid("f36d8acd-1822-4019-ac76-a6ea959d5193"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "gjose2980@gmail.com",
-                            HotelId = new Guid("7a326969-3bf6-40d9-96dc-1aecef585000"),
                             IsActive = true,
                             Name = "Gustavo",
-                            PasswordHash = "$argon2i$v=19$m=4096,t=2,p=2$oDYIoRXyFSm8fBpLfX176A$o/c8Fg3uOXNhWXlUY4v7UCssZP3A+RMgNqUu3lNrKDs",
+                            PasswordHash = "$argon2i$v=19$m=4096,t=2,p=2$FINHXKJuQFFQFbzY1WlwmQ$2nKmeDTeh6cg3Bt9j2FiXacWATkgjo1G5xXlqo0l5dA",
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
@@ -1555,7 +1544,7 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                         new
                         {
                             UserId = new Guid("f36d8acd-1822-4019-ac76-a6ea959d5193"),
-                            RoleId = new Guid("a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
+                            RoleId = new Guid("60ccaec1-6c42-4fb5-a104-2036b42585a3"),
                             AssignedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
@@ -1894,16 +1883,9 @@ namespace AvenSuitesApi.Infrastructure.Migrations
 
             modelBuilder.Entity("AvenSuitesApi.Domain.Entities.User", b =>
                 {
-                    b.HasOne("AvenSuitesApi.Domain.Entities.Hotel", "Hotel")
-                        .WithMany()
-                        .HasForeignKey("HotelId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("AvenSuitesApi.Domain.Entities.Hotel", null)
                         .WithMany("Users")
-                        .HasForeignKey("HotelId1");
-
-                    b.Navigation("Hotel");
+                        .HasForeignKey("HotelId");
                 });
 
             modelBuilder.Entity("AvenSuitesApi.Domain.Entities.UserRole", b =>

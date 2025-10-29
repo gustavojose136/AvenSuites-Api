@@ -43,6 +43,7 @@ public class GuestPiiRepository : IGuestPiiRepository
             existing.AddressLine1 = guestPii.AddressLine1;
             existing.AddressLine2 = guestPii.AddressLine2;
             existing.City = guestPii.City;
+            existing.Neighborhood = guestPii.Neighborhood;
             existing.State = guestPii.State;
             existing.PostalCode = guestPii.PostalCode;
             existing.CountryCode = guestPii.CountryCode;

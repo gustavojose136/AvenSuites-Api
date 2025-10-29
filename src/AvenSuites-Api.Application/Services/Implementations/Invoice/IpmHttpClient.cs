@@ -23,22 +23,34 @@ public class IpmHttpClient : IIpmHttpClient
     {
         try
         {
+            // Limpar headers para evitar conflitos
+            _httpClient.DefaultRequestHeaders.Clear();
+            
             // Configurar autenticação Basic
             var authBytes = Encoding.ASCII.GetBytes($"{username}:{password}");
             _httpClient.DefaultRequestHeaders.Authorization = 
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(authBytes));
-            
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Basic {Convert.ToBase64String(authBytes)}");
 
-            var content = new StringContent(xmlContent, Encoding.UTF8, "application/xml");
-            var response = await _httpClient.PostAsync(endpoint, content);
+            // Criar multipart/form-data com o XML como arquivo
+            using var formData = new MultipartFormDataContent();
+            
+            // Criar o conteúdo do arquivo XML
+            var xmlBytes = Encoding.UTF8.GetBytes(xmlContent);
+            var xmlStreamContent = new StreamContent(new MemoryStream(xmlBytes));
+            xmlStreamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/xml");
+            
+            // Adicionar como arquivo com a chave "note"
+            formData.Add(xmlStreamContent, "note", "nota.xml");
+
+            _logger.LogInformation("Enviando XML para IPM como multipart/form-data");
+            
+            var response = await _httpClient.PostAsync(endpoint, formData);
             
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
                 _logger.LogError("Erro na chamada IPM: {StatusCode} - {Error}", response.StatusCode, errorContent);
-                throw new Exception($"Erro na chamada IPM: {response.StatusCode}");
+                throw new Exception($"Erro na chamada IPM: {response.StatusCode} - {errorContent}");
             }
             
             var responseContent = await response.Content.ReadAsStringAsync();

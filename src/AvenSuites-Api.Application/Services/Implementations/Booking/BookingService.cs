@@ -219,11 +219,62 @@ public class BookingService : IBookingService
         return true;
     }
 
+    public async Task<bool> CheckInAsync(Guid id)
+    {
+        var booking = await _bookingRepository.GetByIdAsync(id);
+        if (booking == null)
+            return false;
+
+        booking.Status = "CHECKED_IN";
+        booking.UpdatedAt = DateTime.UtcNow;
+
+        // Atualizar status do quarto para ocupado
+        foreach (var bookingRoom in booking.BookingRooms)
+        {
+            var room = await _roomRepository.GetByIdAsync(bookingRoom.RoomId);
+            if (room != null)
+            {
+                room.Status = "OCCUPIED";
+                room.UpdatedAt = DateTime.UtcNow;
+                await _roomRepository.UpdateAsync(room);
+            }
+        }
+
+        await _bookingRepository.UpdateAsync(booking);
+        return true;
+    }
+
+    public async Task<bool> CheckOutAsync(Guid id)
+    {
+        var booking = await _bookingRepository.GetByIdAsync(id);
+        if (booking == null)
+            return false;
+
+        booking.Status = "CHECKED_OUT";
+        booking.UpdatedAt = DateTime.UtcNow;
+
+        // Liberar quartos
+        foreach (var bookingRoom in booking.BookingRooms)
+        {
+            var room = await _roomRepository.GetByIdAsync(bookingRoom.RoomId);
+            if (room != null)
+            {
+                room.Status = "CLEANING";
+                room.UpdatedAt = DateTime.UtcNow;
+                await _roomRepository.UpdateAsync(room);
+            }
+        }
+
+        await _bookingRepository.UpdateAsync(booking);
+        return true;
+    }
+
     private static BookingResponse MapToResponse(AvenSuitesApi.Domain.Entities.Booking booking)
     {
         return new BookingResponse
         {
             Id = booking.Id,
+            HotelId = booking.HotelId,
             Code = booking.Code,
             Status = booking.Status,
             Source = booking.Source,

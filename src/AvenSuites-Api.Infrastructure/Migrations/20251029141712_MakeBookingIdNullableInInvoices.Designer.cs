@@ -4,6 +4,7 @@ using AvenSuitesApi.Infrastructure.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AvenSuitesApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251029141712_MakeBookingIdNullableInInvoices")]
+    partial class MakeBookingIdNullableInInvoices
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -531,10 +534,10 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("87f086dd-d461-49c8-a63c-1fc7b6a55441"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 208, DateTimeKind.Utc).AddTicks(2937),
                             HotelId = new Guid("7a326969-3bf6-40d9-96dc-1aecef585000"),
                             MarketingConsent = false,
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 208, DateTimeKind.Utc).AddTicks(2937)
                         });
                 });
 
@@ -604,10 +607,6 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("varchar(150)");
 
-                    b.Property<string>("Neighborhood")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
-
                     b.Property<string>("PhoneE164")
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)");
@@ -645,16 +644,15 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                             AddressLine2 = "NÃO INFORMADO",
                             City = "Joinville",
                             CountryCode = "BR",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 208, DateTimeKind.Utc).AddTicks(2937),
                             DocumentKeyVersion = 1,
                             DocumentPlain = "791.300.709-53",
                             DocumentSha256 = "c4fa5ddbd59571fba8f6bf9ab1bd9eb62d2f334bdebdb4d6be93c64fd6c478d4",
                             DocumentType = "CPF",
                             FullName = "Joni Cardoso",
-                            Neighborhood = "JARIVATUBA",
                             PostalCode = "89230-290",
                             State = "SC",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 208, DateTimeKind.Utc).AddTicks(2937)
                         });
                 });
 
@@ -739,7 +737,7 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                             City = "São Francisco do Sul",
                             Cnpj = "83.630.657/0001-60",
                             CountryCode = "BR",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 157, DateTimeKind.Utc).AddTicks(9808),
                             Email = "gjose2980@gmail.com",
                             Name = "Hotel Avenida",
                             PhoneE164 = "+554799662998",
@@ -748,7 +746,7 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                             Status = "ACTIVE",
                             Timezone = "America/Sao_Paulo",
                             TradeName = "Hotel Avenida",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 157, DateTimeKind.Utc).AddTicks(9947)
                         });
                 });
 
@@ -1018,11 +1016,11 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                             Active = true,
                             CityCode = "8319",
                             CpfCnpj = "83.630.657/0001-60",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 208, DateTimeKind.Utc).AddTicks(2531),
                             HotelId = new Guid("7a326969-3bf6-40d9-96dc-1aecef585000"),
-                            Password = "CS/JwbaBnkcrQ3fIllj06LcDydW/WPNN2CXmSeqpnFo=",
+                            Password = "h7MBnnzoNN+uaBOBW9xSqg6ZoOdAI8uTHDoBVj+w3YU=",
                             SerieNfse = "1",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UpdatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 208, DateTimeKind.Utc).AddTicks(2678),
                             Username = "83.630.657/0001-60"
                         });
                 });
@@ -1114,6 +1112,9 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("varchar(80)");
 
+                    b.Property<string>("TemplateKey1")
+                        .HasColumnType("varchar(80)");
+
                     b.Property<string>("ToAddress")
                         .HasMaxLength(320)
                         .HasColumnType("varchar(320)");
@@ -1124,7 +1125,7 @@ namespace AvenSuitesApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TemplateKey");
+                    b.HasIndex("TemplateKey1");
 
                     b.ToTable("NotificationLogs");
                 });
@@ -1272,23 +1273,15 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("60ccaec1-6c42-4fb5-a104-2036b42585a3"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Administrator role with full access to all hotels",
+                            CreatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 79, DateTimeKind.Utc).AddTicks(2793),
+                            Description = "Administrator role with full access",
                             IsActive = true,
                             Name = "Admin"
                         },
                         new
                         {
-                            Id = new Guid("a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Hotel administrator role with access to specific hotel only",
-                            IsActive = true,
-                            Name = "Hotel-Admin"
-                        },
-                        new
-                        {
                             Id = new Guid("27648377-84b3-44ef-b9b0-45c9cd8fd9fc"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 79, DateTimeKind.Utc).AddTicks(3065),
                             Description = "Standard user role",
                             IsActive = true,
                             Name = "User"
@@ -1338,47 +1331,47 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("40d5718c-dbda-40c7-a4f4-644cd6f177bd"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Id = new Guid("4cdcf044-587e-4047-b164-a8cd64bad303"),
+                            CreatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 205, DateTimeKind.Utc).AddTicks(4671),
                             Floor = "1",
                             HotelId = new Guid("7a326969-3bf6-40d9-96dc-1aecef585000"),
                             RoomNumber = "101",
                             RoomTypeId = new Guid("2318702e-1c6d-4d1c-8f07-d6e0ace9d441"),
                             Status = "ACTIVE",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 205, DateTimeKind.Utc).AddTicks(4805)
                         },
                         new
                         {
-                            Id = new Guid("4cdcf044-587e-4047-b164-a8cd64bad303"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Id = new Guid("bd823cb6-d7a4-45ae-9853-66895ea593bb"),
+                            CreatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 205, DateTimeKind.Utc).AddTicks(4929),
                             Floor = "1",
                             HotelId = new Guid("7a326969-3bf6-40d9-96dc-1aecef585000"),
                             RoomNumber = "102",
                             RoomTypeId = new Guid("2318702e-1c6d-4d1c-8f07-d6e0ace9d441"),
                             Status = "ACTIVE",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 205, DateTimeKind.Utc).AddTicks(4929)
                         },
                         new
                         {
                             Id = new Guid("6bd29bd5-4826-45a0-b734-3197fec5cfbd"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 205, DateTimeKind.Utc).AddTicks(4931),
                             Floor = "1",
                             HotelId = new Guid("7a326969-3bf6-40d9-96dc-1aecef585000"),
                             RoomNumber = "103",
                             RoomTypeId = new Guid("2318702e-1c6d-4d1c-8f07-d6e0ace9d441"),
                             Status = "ACTIVE",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 205, DateTimeKind.Utc).AddTicks(4932)
                         },
                         new
                         {
-                            Id = new Guid("bd823cb6-d7a4-45ae-9853-66895ea593bb"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Id = new Guid("40d5718c-dbda-40c7-a4f4-644cd6f177bd"),
+                            CreatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 205, DateTimeKind.Utc).AddTicks(4933),
                             Floor = "1",
                             HotelId = new Guid("7a326969-3bf6-40d9-96dc-1aecef585000"),
                             RoomNumber = "11",
                             RoomTypeId = new Guid("e9e7976d-59fd-4bda-9468-4d5fdb6feec5"),
                             Status = "ACTIVE",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 205, DateTimeKind.Utc).AddTicks(4934)
                         });
                 });
 
@@ -1437,11 +1430,11 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                             CapacityAdults = (short)2,
                             CapacityChildren = (short)1,
                             Code = "STD",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 205, DateTimeKind.Utc).AddTicks(2493),
                             Description = "Quarto padrão com cama de casal",
                             HotelId = new Guid("7a326969-3bf6-40d9-96dc-1aecef585000"),
                             Name = "Standard",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 205, DateTimeKind.Utc).AddTicks(2630)
                         },
                         new
                         {
@@ -1451,11 +1444,11 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                             CapacityAdults = (short)1,
                             CapacityChildren = (short)0,
                             Code = "BSC",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 205, DateTimeKind.Utc).AddTicks(2760),
                             Description = "Quarto básico com cama de casal",
                             HotelId = new Guid("7a326969-3bf6-40d9-96dc-1aecef585000"),
                             Name = "Basic",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 205, DateTimeKind.Utc).AddTicks(2760)
                         });
                 });
 
@@ -1474,9 +1467,6 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                         .HasColumnType("varchar(100)");
 
                     b.Property<Guid?>("HotelId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid?>("HotelId1")
                         .HasColumnType("char(36)");
 
                     b.Property<bool>("IsActive")
@@ -1501,30 +1491,27 @@ namespace AvenSuitesApi.Infrastructure.Migrations
 
                     b.HasIndex("HotelId");
 
-                    b.HasIndex("HotelId1");
-
                     b.ToTable("Users");
 
                     b.HasData(
                         new
                         {
-                            Id = new Guid("2975cf19-0baa-4507-9f98-968760deb546"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Id = new Guid("f36d8acd-1822-4019-ac76-a6ea959d5193"),
+                            CreatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 157, DateTimeKind.Utc).AddTicks(4203),
                             Email = "admin@avensuites.com",
                             IsActive = true,
                             Name = "Administrator",
-                            PasswordHash = "$argon2i$v=19$m=4096,t=2,p=2$+EyurGTivmXDu42GtNem+w$xp/S+Do2ko5jQ3xebkuPFPwsstewOqL6M7wBRhOZ7hY"
+                            PasswordHash = "$argon2i$v=19$m=4096,t=2,p=2$HUUHRdtkoxoh3zV2p5sRig$Gmy7cLPa7fRUofrOXrdgdaUBku9KXzGvYT4tY6LPG1Y"
                         },
                         new
                         {
-                            Id = new Guid("f36d8acd-1822-4019-ac76-a6ea959d5193"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Id = new Guid("2975cf19-0baa-4507-9f98-968760deb546"),
+                            CreatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 204, DateTimeKind.Utc).AddTicks(7634),
                             Email = "gjose2980@gmail.com",
-                            HotelId = new Guid("7a326969-3bf6-40d9-96dc-1aecef585000"),
                             IsActive = true,
                             Name = "Gustavo",
-                            PasswordHash = "$argon2i$v=19$m=4096,t=2,p=2$oDYIoRXyFSm8fBpLfX176A$o/c8Fg3uOXNhWXlUY4v7UCssZP3A+RMgNqUu3lNrKDs",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            PasswordHash = "$argon2i$v=19$m=4096,t=2,p=2$xhttTBbBsHOWDd79wY9C8Q$ZYpppN25AdVtMVIk1mO7QGuyLPFXVV2xo0Qf7hG0Xr8",
+                            UpdatedAt = new DateTime(2025, 10, 29, 14, 17, 10, 204, DateTimeKind.Utc).AddTicks(7637)
                         });
                 });
 
@@ -1548,15 +1535,15 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            UserId = new Guid("2975cf19-0baa-4507-9f98-968760deb546"),
+                            UserId = new Guid("f36d8acd-1822-4019-ac76-a6ea959d5193"),
                             RoleId = new Guid("60ccaec1-6c42-4fb5-a104-2036b42585a3"),
-                            AssignedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            AssignedAt = new DateTime(2025, 10, 29, 14, 17, 10, 157, DateTimeKind.Utc).AddTicks(5840)
                         },
                         new
                         {
-                            UserId = new Guid("f36d8acd-1822-4019-ac76-a6ea959d5193"),
-                            RoleId = new Guid("a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
-                            AssignedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UserId = new Guid("2975cf19-0baa-4507-9f98-968760deb546"),
+                            RoleId = new Guid("60ccaec1-6c42-4fb5-a104-2036b42585a3"),
+                            AssignedAt = new DateTime(2025, 10, 29, 14, 17, 10, 204, DateTimeKind.Utc).AddTicks(9093)
                         });
                 });
 
@@ -1826,8 +1813,7 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                 {
                     b.HasOne("AvenSuitesApi.Domain.Entities.NotificationTemplate", "Template")
                         .WithMany("NotificationLogs")
-                        .HasForeignKey("TemplateKey")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("TemplateKey1");
 
                     b.Navigation("Template");
                 });
@@ -1894,16 +1880,9 @@ namespace AvenSuitesApi.Infrastructure.Migrations
 
             modelBuilder.Entity("AvenSuitesApi.Domain.Entities.User", b =>
                 {
-                    b.HasOne("AvenSuitesApi.Domain.Entities.Hotel", "Hotel")
-                        .WithMany()
-                        .HasForeignKey("HotelId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("AvenSuitesApi.Domain.Entities.Hotel", null)
                         .WithMany("Users")
-                        .HasForeignKey("HotelId1");
-
-                    b.Navigation("Hotel");
+                        .HasForeignKey("HotelId");
                 });
 
             modelBuilder.Entity("AvenSuitesApi.Domain.Entities.UserRole", b =>

@@ -12,5 +12,7 @@ public interface IBookingService
     Task<BookingResponse?> UpdateBookingAsync(Guid id, BookingUpdateRequest request);
     Task<bool> CancelBookingAsync(Guid id, string? reason = null);
     Task<bool> ConfirmBookingAsync(Guid id);
+    Task<bool> CheckInAsync(Guid id);
+    Task<bool> CheckOutAsync(Guid id);
 }
 

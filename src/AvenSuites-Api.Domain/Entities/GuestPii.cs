@@ -44,6 +44,9 @@ public class GuestPii
     [MaxLength(120)]
     public string? City { get; set; }
     
+    [MaxLength(100)]
+    public string? Neighborhood { get; set; }
+    
     [MaxLength(60)]
     public string? State { get; set; }
     

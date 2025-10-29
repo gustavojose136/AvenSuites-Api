@@ -17,10 +17,13 @@ public class User
     [Required]
     public string PasswordHash { get; set; } = string.Empty;
     
+    public Guid? HotelId { get; set; }
+    
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public bool IsActive { get; set; } = true;
     
     // Navigation properties
     public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+    public virtual Hotel? Hotel { get; set; }
 }

@@ -14,8 +14,7 @@ public class InvoiceService : IInvoiceService
     public InvoiceService(
         IInvoiceRepository invoiceRepository,
         IBookingRepository bookingRepository,
-        IHotelRepository hotelRepository,
-        IIpmCredentialsRepository ipmCredentialsRepository)
+        IHotelRepository hotelRepository)
     {
         _invoiceRepository = invoiceRepository;
         _bookingRepository = bookingRepository;

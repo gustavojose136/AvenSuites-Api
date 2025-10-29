@@ -6,8 +6,7 @@ public class Invoice
 {
     public Guid Id { get; set; }
     
-    [Required]
-    public Guid BookingId { get; set; }
+    public Guid? BookingId { get; set; }
     
     [Required]
     public Guid HotelId { get; set; }
@@ -56,7 +55,7 @@ public class Invoice
     public DateTime UpdatedAt { get; set; }
     
     // Navigation properties
-    public virtual Booking Booking { get; set; } = null!;
+    public virtual Booking? Booking { get; set; }
     public virtual Hotel Hotel { get; set; } = null!;
     public virtual ICollection<InvoiceItem> Items { get; set; } = new List<InvoiceItem>();
 }

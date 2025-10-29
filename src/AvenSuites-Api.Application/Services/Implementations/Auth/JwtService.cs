@@ -29,6 +29,12 @@ public class JwtService : IJwtService
             new(ClaimTypes.Email, user.Email)
         };
 
+        // Add HotelId claim if user has a hotel
+        if (user.HotelId.HasValue)
+        {
+            claims.Add(new Claim("HotelId", user.HotelId.Value.ToString()));
+        }
+
         // Add role claims
         foreach (var userRole in user.UserRoles)
         {

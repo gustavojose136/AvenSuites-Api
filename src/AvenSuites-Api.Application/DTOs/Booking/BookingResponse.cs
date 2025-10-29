@@ -3,6 +3,7 @@ namespace AvenSuitesApi.Application.DTOs.Booking;
 public class BookingResponse
 {
     public Guid Id { get; set; }
+    public Guid HotelId { get; set; }
     public string Code { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public string Source { get; set; } = string.Empty;

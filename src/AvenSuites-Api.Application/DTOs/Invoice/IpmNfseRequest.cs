@@ -4,8 +4,7 @@ namespace AvenSuitesApi.Application.DTOs.Invoice;
 
 public class IpmNfseCreateRequest
 {
-    [Required]
-    public Guid BookingId { get; set; }
+    public Guid? BookingId { get; set; }
     
     [MaxLength(50)]
     public string? Identifier { get; set; }

@@ -4,6 +4,7 @@ using AvenSuitesApi.Infrastructure.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AvenSuitesApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251029171728_AddHotelAdminRole")]
+    partial class AddHotelAdminRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1020,7 +1023,7 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                             CpfCnpj = "83.630.657/0001-60",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             HotelId = new Guid("7a326969-3bf6-40d9-96dc-1aecef585000"),
-                            Password = "CS/JwbaBnkcrQ3fIllj06LcDydW/WPNN2CXmSeqpnFo=",
+                            Password = "iUHVQP0T92cp/oEAmQDCnyTaUVt7RGnzi2cRNIcDXcQ=",
                             SerieNfse = "1",
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Username = "83.630.657/0001-60"
@@ -1476,9 +1479,6 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                     b.Property<Guid?>("HotelId")
                         .HasColumnType("char(36)");
 
-                    b.Property<Guid?>("HotelId1")
-                        .HasColumnType("char(36)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
@@ -1501,8 +1501,6 @@ namespace AvenSuitesApi.Infrastructure.Migrations
 
                     b.HasIndex("HotelId");
 
-                    b.HasIndex("HotelId1");
-
                     b.ToTable("Users");
 
                     b.HasData(
@@ -1513,17 +1511,16 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                             Email = "admin@avensuites.com",
                             IsActive = true,
                             Name = "Administrator",
-                            PasswordHash = "$argon2i$v=19$m=4096,t=2,p=2$+EyurGTivmXDu42GtNem+w$xp/S+Do2ko5jQ3xebkuPFPwsstewOqL6M7wBRhOZ7hY"
+                            PasswordHash = "$argon2i$v=19$m=4096,t=2,p=2$pKVDUGmnfneyLbixU7g1uA$d+1b5V9cpdqADW9ufucbR88/YxDDB930Lg/Zylb6YL0"
                         },
                         new
                         {
                             Id = new Guid("f36d8acd-1822-4019-ac76-a6ea959d5193"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "gjose2980@gmail.com",
-                            HotelId = new Guid("7a326969-3bf6-40d9-96dc-1aecef585000"),
                             IsActive = true,
                             Name = "Gustavo",
-                            PasswordHash = "$argon2i$v=19$m=4096,t=2,p=2$oDYIoRXyFSm8fBpLfX176A$o/c8Fg3uOXNhWXlUY4v7UCssZP3A+RMgNqUu3lNrKDs",
+                            PasswordHash = "$argon2i$v=19$m=4096,t=2,p=2$gRgdm2PJKPq530bISXiflg$m8OpAdgDDRjP4Ux83ulJWpcmHgcwxsud06l6pe3D6iQ",
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
@@ -1894,16 +1891,9 @@ namespace AvenSuitesApi.Infrastructure.Migrations
 
             modelBuilder.Entity("AvenSuitesApi.Domain.Entities.User", b =>
                 {
-                    b.HasOne("AvenSuitesApi.Domain.Entities.Hotel", "Hotel")
-                        .WithMany()
-                        .HasForeignKey("HotelId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("AvenSuitesApi.Domain.Entities.Hotel", null)
                         .WithMany("Users")
-                        .HasForeignKey("HotelId1");
-
-                    b.Navigation("Hotel");
+                        .HasForeignKey("HotelId");
                 });
 
             modelBuilder.Entity("AvenSuitesApi.Domain.Entities.UserRole", b =>
