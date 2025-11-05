@@ -26,13 +26,13 @@ public class RoomsController : ControllerBase
     /// Admin vê todos, Hotel-Admin vê apenas do próprio hotel.
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = "Admin,Hotel-Admin")]
+    [Authorize(Roles = "Admin,Hotel-Admin,Guest")]
     [ProducesResponseType(typeof(IEnumerable<RoomResponse>), 200)]
     public async Task<ActionResult<IEnumerable<RoomResponse>>> GetAll(
         [FromQuery] Guid? hotelId = null,
         [FromQuery] string? status = null)
     {
-        if (_currentUser.IsAdmin())
+        if (_currentUser.IsAdmin() || _currentUser.IsGuest())
         {
             // Admin pode filtrar por qualquer hotel ou ver todos
             if (hotelId.HasValue)
@@ -68,7 +68,7 @@ public class RoomsController : ControllerBase
     /// Busca quarto por ID. Requer acesso ao hotel do quarto.
     /// </summary>
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Hotel-Admin")]
+    [Authorize(Roles = "Admin,Hotel-Admin,Guest")]
     [ProducesResponseType(typeof(RoomResponse), 200)]
     [ProducesResponseType(404)]
     [ProducesResponseType(403)]
@@ -89,7 +89,7 @@ public class RoomsController : ControllerBase
     /// Lista quartos por hotel. Requer acesso ao hotel.
     /// </summary>
     [HttpGet("hotel/{hotelId}")]
-    [Authorize(Roles = "Admin,Hotel-Admin")]
+    [Authorize(Roles = "Admin,Hotel-Admin,Guest")]
     [ProducesResponseType(typeof(IEnumerable<RoomResponse>), 200)]
     [ProducesResponseType(403)]
     public async Task<ActionResult<IEnumerable<RoomResponse>>> GetByHotel(
@@ -108,7 +108,7 @@ public class RoomsController : ControllerBase
     /// Verifica disponibilidade de quartos. Requer acesso ao hotel.
     /// </summary>
     [HttpGet("availability")]
-    [Authorize(Roles = "Admin,Hotel-Admin")]
+    [Authorize(Roles = "Admin,Hotel-Admin,Guest")]
     [ProducesResponseType(typeof(IEnumerable<RoomAvailabilityResponse>), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(403)]

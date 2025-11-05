@@ -160,13 +160,30 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => new { e.RoomId, e.StayDate }).IsUnique();
         });
 
+        // Guest configuration
+        modelBuilder.Entity<Guest>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            
+            entity.HasOne(e => e.Hotel)
+                .WithMany(e => e.Guests)
+                .HasForeignKey(e => e.HotelId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
         // GuestPii configuration
         modelBuilder.Entity<GuestPii>(entity =>
         {
             entity.HasKey(e => e.GuestId);
             entity.HasOne(e => e.Guest)
                 .WithOne(e => e.GuestPii)
-                .HasForeignKey<Guest>(e => e.Id)
+                .HasForeignKey<GuestPii>(e => e.GuestId)
                 .OnDelete(DeleteBehavior.Cascade);
             
             entity.HasIndex(e => e.EmailSha256);
@@ -216,6 +233,7 @@ public class ApplicationDbContext : DbContext
         var adminRoleId = new Guid("60ccaec1-6c42-4fb5-a104-2036b42585a3");
         var hotelAdminRoleId = new Guid("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
         var userRoleId = new Guid("27648377-84b3-44ef-b9b0-45c9cd8fd9fc");
+        var guestRoleId = new Guid("b2c3d4e5-f6a7-8901-bcde-f12345678901");
 
         modelBuilder.Entity<Role>().HasData(
             new Role
@@ -239,6 +257,14 @@ public class ApplicationDbContext : DbContext
                 Id = userRoleId,
                 Name = "User",
                 Description = "Standard user role",
+                CreatedAt = fixedCreatedAt,
+                IsActive = true
+            },
+            new Role
+            {
+                Id = guestRoleId,
+                Name = "Guest",
+                Description = "Guest role for customers who can make reservations",
                 CreatedAt = fixedCreatedAt,
                 IsActive = true
             }

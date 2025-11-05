@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using AvenSuitesApi.Application.DTOs;
+using AvenSuitesApi.Application.DTOs.Guest;
 using AvenSuitesApi.Application.Services.Interfaces;
 
 namespace AvenSuitesApi.Controllers.Auth;
@@ -9,10 +10,12 @@ namespace AvenSuitesApi.Controllers.Auth;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IGuestRegistrationService _guestRegistrationService;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService, IGuestRegistrationService guestRegistrationService)
     {
         _authService = authService;
+        _guestRegistrationService = guestRegistrationService;
     }
 
     [HttpPost("login")]
@@ -52,5 +55,29 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Credenciais inválidas" });
 
         return Ok(new { message = "Credenciais válidas" });
+    }
+
+    /// <summary>
+    /// Registro de novo hóspede (self-registration)
+    /// </summary>
+    [HttpPost("register-guest")]
+    public async Task<ActionResult<LoginResponse>> RegisterGuest([FromBody] GuestRegisterRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
+        {
+            var result = await _guestRegistrationService.RegisterAsync(request);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Erro interno ao registrar hóspede" });
+        }
     }
 }

@@ -8,6 +8,7 @@ namespace AvenSuitesApi.Application.Services.Implementations.Booking;
 public class BookingService : IBookingService
 {
     private readonly IBookingRepository _bookingRepository;
+    private readonly IBookingRoomRepository _bookingRoomRepository;
     private readonly IHotelRepository _hotelRepository;
     private readonly IGuestRepository _guestRepository;
     private readonly IRoomRepository _roomRepository;
@@ -15,12 +16,14 @@ public class BookingService : IBookingService
 
     public BookingService(
         IBookingRepository bookingRepository,
+        IBookingRoomRepository bookingRoomRepository,
         IHotelRepository hotelRepository,
         IGuestRepository guestRepository,
         IRoomRepository roomRepository,
         IRatePlanRepository ratePlanRepository)
     {
         _bookingRepository = bookingRepository;
+        _bookingRoomRepository = bookingRoomRepository;
         _hotelRepository = hotelRepository;
         _guestRepository = guestRepository;
         _roomRepository = roomRepository;
@@ -35,7 +38,7 @@ public class BookingService : IBookingService
             return null;
 
         // Validar hóspede principal
-        var mainGuest = await _guestRepository.GetByIdAsync(request.MainGuestId);
+        var mainGuest = await _guestRepository.GetByUserId(request.MainGuestId);
         if (mainGuest == null)
             return null;
 
@@ -69,7 +72,7 @@ public class BookingService : IBookingService
             Adults = request.Adults,
             Children = request.Children,
             Currency = request.Currency,
-            MainGuestId = request.MainGuestId,
+            MainGuestId = mainGuest.Id,
             ChannelRef = request.ChannelRef,
             Notes = request.Notes,
             TotalAmount = CalculateTotalFromRequest(request),
@@ -95,8 +98,10 @@ public class BookingService : IBookingService
                 UpdatedAt = DateTime.UtcNow
             };
             
-            // Adicionar ao contexto - você precisará injetar ApplicationDbContext
-            // _context.BookingRooms.Add(bookingRoom);
+            // Adicionar usando o repositório (seguindo SOLID)
+            await _bookingRoomRepository.AddAsync(bookingRoom);
+
+            createdBooking.BookingRooms.Add(bookingRoom);
         }
         
         return MapToResponse(createdBooking);
@@ -301,9 +306,9 @@ public class BookingService : IBookingService
                 Id = br.Id,
                 RoomId = br.RoomId,
                 RoomNumber = br.Room.RoomNumber,
-                RoomTypeName = br.RoomType.Name,
+                RoomTypeName = br.RoomType?.Name ?? "",
                 PriceTotal = br.PriceTotal,
-                Notes = br.Notes
+                Notes = br.Notes ?? ""
             }).ToList(),
             Payments = booking.Payments.Select(p => new BookingPaymentResponse
             {

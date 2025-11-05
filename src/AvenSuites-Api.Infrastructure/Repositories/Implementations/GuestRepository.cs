@@ -19,6 +19,11 @@ public class GuestRepository : IGuestRepository
         return await _context.Guests.FirstOrDefaultAsync(g => g.Id == id);
     }
 
+    public async Task<Guest?> GetByUserId(Guid userId)
+    {
+        return await _context.Guests.FirstOrDefaultAsync(g => g.UserId == userId);
+    }
+
     public async Task<Guest?> GetByIdWithPiiAsync(Guid id)
     {
         return await _context.Guests

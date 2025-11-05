@@ -26,6 +26,7 @@ public class UserRepository : IUserRepository
     {
         return await _context.Users
             .Include(u => u.Hotel)
+            .Include(u => u.Guest)
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.Email == email);

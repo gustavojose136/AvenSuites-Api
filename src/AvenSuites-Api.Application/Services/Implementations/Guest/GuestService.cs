@@ -28,22 +28,10 @@ public class GuestService : IGuestService
         if (hotel == null)
             return null;
 
-        // Criar hóspede
-        var guest = new AvenSuitesApi.Domain.Entities.Guest
-        {
-            Id = Guid.NewGuid(),
-            HotelId = request.HotelId,
-            MarketingConsent = request.MarketingConsent,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        var createdGuest = await _guestRepository.AddAsync(guest);
-
         // Criar dados PII
         var guestPii = new GuestPii
         {
-            GuestId = createdGuest.Id,
+            GuestId = Guid.NewGuid(),
             FullName = request.FullName,
             Email = request.Email,
             PhoneE164 = request.PhoneE164,
@@ -62,6 +50,19 @@ public class GuestService : IGuestService
         };
 
         await _guestPiiRepository.AddOrUpdateAsync(guestPii);
+
+        // Criar hóspede
+        var guest = new AvenSuitesApi.Domain.Entities.Guest
+        {
+            Id = Guid.NewGuid(),
+            GuestPii = guestPii,
+            HotelId = request.HotelId,
+            MarketingConsent = request.MarketingConsent,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        var createdGuest = await _guestRepository.AddAsync(guest);
 
         return MapToResponse(createdGuest);
     }

@@ -9,6 +9,11 @@ public class Guest
     [Required]
     public Guid HotelId { get; set; }
     
+    /// <summary>
+    /// UserId se o hóspede tiver uma conta de usuário no sistema
+    /// </summary>
+    public Guid? UserId { get; set; }
+    
     public bool MarketingConsent { get; set; }
     
     public DateTime CreatedAt { get; set; }
@@ -16,6 +21,7 @@ public class Guest
     
     // Navigation properties
     public virtual Hotel Hotel { get; set; } = null!;
+    public virtual User? User { get; set; }
     public virtual GuestPii? GuestPii { get; set; }
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
     public virtual ICollection<BookingGuest> GuestBookings { get; set; } = new List<BookingGuest>();

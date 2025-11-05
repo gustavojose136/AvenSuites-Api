@@ -25,11 +25,11 @@ public class HotelsController : ControllerBase
     /// Lista todos os hotéis. Admin vê todos, Hotel-Admin vê apenas o próprio hotel.
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = "Admin,Hotel-Admin")]
+    [Authorize(Roles = "Admin,Hotel-Admin,Guest")]
     [ProducesResponseType(typeof(IEnumerable<HotelResponse>), 200)]
     public async Task<ActionResult<IEnumerable<HotelResponse>>> GetAll()
     {
-        if (_currentUser.IsAdmin())
+        if (_currentUser.IsAdmin() || _currentUser.IsGuest())
         {
             // Admin vê todos os hotéis
             var hotels = await _hotelService.GetAllHotelsAsync();
@@ -57,7 +57,7 @@ public class HotelsController : ControllerBase
     /// Busca hotel por ID. Requer acesso ao hotel específico.
     /// </summary>
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Hotel-Admin")]
+    [Authorize(Roles = "Admin,Hotel-Admin,Guest")]
     [ProducesResponseType(typeof(HotelResponse), 200)]
     [ProducesResponseType(404)]
     [ProducesResponseType(403)]
@@ -78,7 +78,7 @@ public class HotelsController : ControllerBase
     /// Busca hotel por CNPJ. Requer acesso ao hotel.
     /// </summary>
     [HttpGet("cnpj/{cnpj}")]
-    [Authorize(Roles = "Admin,Hotel-Admin")]
+    [Authorize(Roles = "Admin,Hotel-Admin,Guest")]
     [ProducesResponseType(typeof(HotelResponse), 200)]
     [ProducesResponseType(404)]
     [ProducesResponseType(403)]

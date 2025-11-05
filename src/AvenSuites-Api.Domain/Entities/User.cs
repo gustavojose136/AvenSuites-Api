@@ -26,4 +26,5 @@ public class User
     // Navigation properties
     public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public virtual Hotel? Hotel { get; set; }
+    public virtual Guest? Guest { get; set; }
 }

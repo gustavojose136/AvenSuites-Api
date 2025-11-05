@@ -5,6 +5,7 @@ namespace AvenSuitesApi.Domain.Interfaces;
 public interface IGuestRepository
 {
     Task<Guest?> GetByIdAsync(Guid id);
+    Task<Guest?> GetByUserId(Guid userId);
     Task<Guest?> GetByIdWithPiiAsync(Guid id);
     Task<IEnumerable<Guest>> GetByHotelIdAsync(Guid hotelId);
     Task<Guest> AddAsync(Guest guest);

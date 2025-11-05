@@ -158,7 +158,7 @@ public class BookingsController : ControllerBase
     /// Cria uma nova reserva. Requer acesso ao hotel.
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Admin,Hotel-Admin")]
+    [Authorize()]
     [ProducesResponseType(typeof(BookingResponse), 201)]
     [ProducesResponseType(400)]
     [ProducesResponseType(403)]

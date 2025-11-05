@@ -43,6 +43,16 @@ public class CurrentUserService : ICurrentUserService
         return Guid.TryParse(hotelIdClaim, out var hotelId) ? hotelId : null;
     }
 
+    public Guid? GetUserGuestId()
+    {
+        var guestIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("GuestId")?.Value;
+        
+        if (string.IsNullOrEmpty(guestIdClaim))
+            return null;
+        
+        return Guid.TryParse(guestIdClaim, out var guestId) ? guestId : null;
+    }
+
     public List<string> GetUserRoles()
     {
         var roles = _httpContextAccessor.HttpContext?.User?
@@ -63,10 +73,15 @@ public class CurrentUserService : ICurrentUserService
         return GetUserRoles().Contains("Hotel-Admin");
     }
 
+    public bool IsGuest()
+    {
+        return GetUserRoles().Contains("Guest");
+    }
+
     public bool HasAccessToHotel(Guid hotelId)
     {
         // Admin tem acesso a todos os hotéis
-        if (IsAdmin())
+        if (IsAdmin() || IsGuest())
             return true;
         
         // Hotel-Admin só tem acesso ao próprio hotel
@@ -74,6 +89,26 @@ public class CurrentUserService : ICurrentUserService
         {
             var userHotelId = GetUserHotelId();
             return userHotelId.HasValue && userHotelId.Value == hotelId;
+        }
+        
+        return false;
+    }
+
+    public bool HasAccessToGuest(Guid guestId)
+    {
+        // Admin tem acesso a todos os guests
+        if (IsAdmin())
+            return true;
+        
+        // Hotel-Admin tem acesso a guests do seu hotel (precisa verificar via repository)
+        if (IsHotelAdmin())
+            return true; // A verificação completa será feita no controller
+        
+        // Guest só tem acesso aos próprios dados
+        if (IsGuest())
+        {
+            var userGuestId = GetUserGuestId();
+            return userGuestId.HasValue && userGuestId.Value == guestId;
         }
         
         return false;
