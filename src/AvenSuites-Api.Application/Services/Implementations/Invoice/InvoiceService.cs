@@ -2,6 +2,9 @@ using AvenSuitesApi.Application.DTOs.Invoice;
 using AvenSuitesApi.Application.Services.Interfaces;
 using AvenSuitesApi.Domain.Entities;
 using AvenSuitesApi.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
+using BookingRoomInfo = AvenSuitesApi.Application.Services.Interfaces.BookingRoomInfo;
+using InvoiceItemInfo = AvenSuitesApi.Application.Services.Interfaces.InvoiceItemInfo;
 
 namespace AvenSuitesApi.Application.Services.Implementations.Invoice;
 
@@ -10,15 +13,24 @@ public class InvoiceService : IInvoiceService
     private readonly IInvoiceRepository _invoiceRepository;
     private readonly IBookingRepository _bookingRepository;
     private readonly IHotelRepository _hotelRepository;
+    private readonly IEmailService _emailService;
+    private readonly IEmailTemplateService _emailTemplateService;
+    private readonly ILogger<InvoiceService> _logger;
 
     public InvoiceService(
         IInvoiceRepository invoiceRepository,
         IBookingRepository bookingRepository,
-        IHotelRepository hotelRepository)
+        IHotelRepository hotelRepository,
+        IEmailService emailService,
+        IEmailTemplateService emailTemplateService,
+        ILogger<InvoiceService> logger)
     {
         _invoiceRepository = invoiceRepository;
         _bookingRepository = bookingRepository;
         _hotelRepository = hotelRepository;
+        _emailService = emailService;
+        _emailTemplateService = emailTemplateService;
+        _logger = logger;
     }
 
     public async Task<InvoiceResponse?> GenerateInvoiceAsync(Guid bookingId)
@@ -60,7 +72,66 @@ public class InvoiceService : IInvoiceService
         };
 
         var createdInvoice = await _invoiceRepository.AddAsync(invoice);
-        return MapToResponse(createdInvoice);
+        var invoiceResponse = MapToResponse(createdInvoice);
+
+        // Enviar e-mail de notificação para o hotel
+        try
+        {
+            var hotel = await _hotelRepository.GetByIdAsync(booking.HotelId);
+            if (hotel != null && !string.IsNullOrWhiteSpace(hotel.Email))
+            {
+                var guestPii = booking.MainGuest?.GuestPii;
+                var guestName = guestPii?.FullName ?? "Hóspede";
+                var bookingCode = booking.Code;
+
+                var items = createdInvoice.Items.Select(i => new InvoiceItemInfo
+                {
+                    Description = i.Description,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.UnitPrice,
+                    Total = i.Total,
+                    TaxCode = i.TaxCode,
+                    TaxRate = i.TaxRate
+                }).ToList();
+
+                var totalAmount = createdInvoice.TotalServices + createdInvoice.TotalTaxes;
+                var issueDate = createdInvoice.IssueDate ?? DateTime.UtcNow;
+
+                var emailBody = _emailTemplateService.GenerateHotelInvoiceNotificationEmail(
+                    hotelName: hotel.Name,
+                    nfseNumber: createdInvoice.NfseNumber,
+                    nfseSeries: createdInvoice.NfseSeries,
+                    verificationCode: createdInvoice.VerificationCode,
+                    bookingCode: bookingCode,
+                    guestName: guestName,
+                    totalServices: createdInvoice.TotalServices,
+                    totalTaxes: createdInvoice.TotalTaxes,
+                    totalAmount: totalAmount,
+                    issueDate: issueDate,
+                    items: items,
+                    erpProvider: createdInvoice.ErpProvider,
+                    erpProtocol: createdInvoice.ErpProtocol);
+
+                await _emailService.SendEmailAsync(
+                    to: hotel.Email,
+                    subject: $"Nota Fiscal Gerada - {createdInvoice.NfseNumber ?? "N/A"}",
+                    body: emailBody,
+                    isHtml: true,
+                    cc: null,
+                    bcc: null);
+
+                _logger.LogInformation("E-mail de notificação de nota fiscal enviado para hotel {HotelEmail}, Invoice: {InvoiceId}",
+                    hotel.Email, createdInvoice.Id);
+            }
+        }
+        catch (Exception emailEx)
+        {
+            // Não falhar a criação da nota se o e-mail falhar
+            _logger.LogWarning(emailEx, "Erro ao enviar e-mail de notificação de nota fiscal para hotel, Invoice: {InvoiceId}",
+                createdInvoice.Id);
+        }
+
+        return invoiceResponse;
     }
 
     public async Task<InvoiceResponse?> GenerateInvoiceFromBookingAsync(Guid bookingId)

@@ -18,6 +18,8 @@ public class GuestRegistrationService : IGuestRegistrationService
     private readonly IRoleRepository _roleRepository;
     private readonly IHotelRepository _hotelRepository;
     private readonly IJwtService _jwtService;
+    private readonly IEmailService _emailService;
+    private readonly IEmailTemplateService _emailTemplateService;
     private readonly ILogger<GuestRegistrationService> _logger;
 
     public GuestRegistrationService(
@@ -27,6 +29,8 @@ public class GuestRegistrationService : IGuestRegistrationService
         IRoleRepository roleRepository,
         IHotelRepository hotelRepository,
         IJwtService jwtService,
+        IEmailService emailService,
+        IEmailTemplateService emailTemplateService,
         ILogger<GuestRegistrationService> logger)
     {
         _userRepository = userRepository;
@@ -35,6 +39,8 @@ public class GuestRegistrationService : IGuestRegistrationService
         _roleRepository = roleRepository;
         _hotelRepository = hotelRepository;
         _jwtService = jwtService;
+        _emailService = emailService;
+        _emailTemplateService = emailTemplateService;
         _logger = logger;
     }
 
@@ -135,6 +141,26 @@ public class GuestRegistrationService : IGuestRegistrationService
             var token = _jwtService.GenerateToken(user);
 
             _logger.LogInformation("Hóspede registrado com sucesso: {Email}", request.Email);
+
+            // Enviar e-mail de boas-vindas
+            try
+            {
+                var emailBody = _emailTemplateService.GenerateWelcomeEmail(request.Name, hotel.Name);
+                await _emailService.SendEmailAsync(
+                    to: request.Email,
+                    subject: $"Bem-vindo ao {hotel.Name}!",
+                    body: emailBody,
+                    isHtml: true,
+                    cc: null,
+                    bcc: null);
+                
+                _logger.LogInformation("E-mail de boas-vindas enviado para {Email}", request.Email);
+            }
+            catch (Exception emailEx)
+            {
+                // Não falhar o registro se o e-mail falhar
+                _logger.LogWarning(emailEx, "Erro ao enviar e-mail de boas-vindas para {Email}", request.Email);
+            }
 
             return new LoginResponse
             {

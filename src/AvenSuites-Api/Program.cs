@@ -81,21 +81,23 @@ builder.Services.AddCors(options =>
 });
 
 // Application layers
-builder.Services.AddApplication();
+builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // Background Workers
 builder.Services.AddHostedService<AvenSuitesApi.Workers.InvoiceBackgroundWorker>();
 builder.Services.AddHostedService<AvenSuitesApi.Workers.IntegrationEventPublisher>();
+builder.Services.AddHostedService<AvenSuitesApi.Workers.BookingReminderWorker>();
+builder.Services.AddHostedService<AvenSuitesApi.Workers.CheckOutReminderWorker>();
 
 var app = builder.Build();
 
 // Pipeline
 if (app.Environment.IsDevelopment())
 {
+}
     app.UseSwagger();
     app.UseSwaggerUI();
-}
 
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");

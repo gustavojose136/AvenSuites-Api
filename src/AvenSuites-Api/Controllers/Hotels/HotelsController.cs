@@ -6,7 +6,7 @@ using AvenSuitesApi.Application.Services.Interfaces;
 namespace AvenSuitesApi.Controllers.Hotels;
 
 [ApiController]
-[Authorize]
+//[Authorize]
 [Route("api/[controller]")]
 public class HotelsController : ControllerBase
 {
@@ -25,7 +25,7 @@ public class HotelsController : ControllerBase
     /// Lista todos os hotéis. Admin vê todos, Hotel-Admin vê apenas o próprio hotel.
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = "Admin,Hotel-Admin,Guest")]
+    //[Authorize(Roles = "Admin,Hotel-Admin,Guest")]
     [ProducesResponseType(typeof(IEnumerable<HotelResponse>), 200)]
     public async Task<ActionResult<IEnumerable<HotelResponse>>> GetAll()
     {
@@ -49,7 +49,12 @@ public class HotelsController : ControllerBase
                 
             return Ok(new[] { hotel });
         }
-        
+
+        var hotelsA = await _hotelService.GetAllHotelsAsync();
+        if(hotelsA != null)
+            return Ok(hotelsA);
+
+
         return Forbid();
     }
 

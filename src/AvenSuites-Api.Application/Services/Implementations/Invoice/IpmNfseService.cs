@@ -5,6 +5,7 @@ using AvenSuitesApi.Application.DTOs.Invoice;
 using AvenSuitesApi.Application.Services.Interfaces;
 using AvenSuitesApi.Domain.Entities;
 using AvenSuitesApi.Domain.Interfaces;
+using InvoiceItemInfo = AvenSuitesApi.Application.Services.Interfaces.InvoiceItemInfo;
 
 namespace AvenSuitesApi.Application.Services.Implementations.Invoice;
 
@@ -18,6 +19,8 @@ public class IpmNfseService : IIpmNfseService
     private readonly IInvoiceRepository _invoiceRepository;
     private readonly IErpIntegrationLogRepository _erpLogRepository;
     private readonly IIpmHttpClient _httpClient;
+    private readonly IEmailService _emailService;
+    private readonly IEmailTemplateService _emailTemplateService;
     private readonly ILogger<IpmNfseService> _logger;
 
     public IpmNfseService(
@@ -29,6 +32,8 @@ public class IpmNfseService : IIpmNfseService
         IInvoiceRepository invoiceRepository,
         IErpIntegrationLogRepository erpLogRepository,
         IIpmHttpClient httpClient,
+        IEmailService emailService,
+        IEmailTemplateService emailTemplateService,
         ILogger<IpmNfseService> logger)
     {
         _credentialsService = credentialsService;
@@ -39,6 +44,8 @@ public class IpmNfseService : IIpmNfseService
         _invoiceRepository = invoiceRepository;
         _erpLogRepository = erpLogRepository;
         _httpClient = httpClient;
+        _emailService = emailService;
+        _emailTemplateService = emailTemplateService;
         _logger = logger;
     }
 
