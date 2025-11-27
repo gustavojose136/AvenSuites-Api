@@ -26,6 +26,13 @@ public class RoomTypeRepository : IRoomTypeRepository
             .FirstOrDefaultAsync(rt => rt.Id == id);
     }
 
+    public async Task<RoomType?> GetByIdWithOccupancyPricesAsync(Guid id)
+    {
+        return await _context.RoomTypes
+            .Include(rt => rt.OccupancyPrices)
+            .FirstOrDefaultAsync(rt => rt.Id == id);
+    }
+
     public async Task<IEnumerable<RoomType>> GetByHotelIdAsync(Guid hotelId)
     {
         return await _context.RoomTypes

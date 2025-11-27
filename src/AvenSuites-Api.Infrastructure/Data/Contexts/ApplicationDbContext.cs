@@ -26,6 +26,7 @@ public class ApplicationDbContext : DbContext
     // Rooms
     public DbSet<Room> Rooms { get; set; }
     public DbSet<RoomType> RoomTypes { get; set; }
+    public DbSet<RoomTypeOccupancyPrice> RoomTypeOccupancyPrices { get; set; }
     public DbSet<Amenity> Amenities { get; set; }
     public DbSet<MaintenanceBlock> MaintenanceBlocks { get; set; }
     
@@ -218,6 +219,22 @@ public class ApplicationDbContext : DbContext
                 .WithOne()
                 .HasForeignKey<IpmCredentials>(e => e.HotelId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // RoomTypeOccupancyPrice configuration
+        modelBuilder.Entity<RoomTypeOccupancyPrice>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Occupancy).IsRequired();
+            entity.Property(e => e.PricePerNight).IsRequired().HasPrecision(18, 2);
+            
+            entity.HasOne(e => e.RoomType)
+                .WithMany(rt => rt.OccupancyPrices)
+                .HasForeignKey(e => e.RoomTypeId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            // Índice único para garantir que não haja preços duplicados para a mesma ocupação
+            entity.HasIndex(e => new { e.RoomTypeId, e.Occupancy }).IsUnique();
         });
 
         // Seed data

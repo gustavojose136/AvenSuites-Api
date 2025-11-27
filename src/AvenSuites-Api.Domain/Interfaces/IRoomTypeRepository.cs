@@ -6,6 +6,7 @@ public interface IRoomTypeRepository
 {
     Task<RoomType?> GetByIdAsync(Guid id);
     Task<RoomType?> GetByIdWithAmenitiesAsync(Guid id);
+    Task<RoomType?> GetByIdWithOccupancyPricesAsync(Guid id);
     Task<IEnumerable<RoomType>> GetByHotelIdAsync(Guid hotelId);
     Task<IEnumerable<RoomType>> GetActiveByHotelIdAsync(Guid hotelId);
     Task<RoomType> AddAsync(RoomType roomType);
