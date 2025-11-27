@@ -7,7 +7,7 @@ namespace AvenSuitesApi.Controllers.GuestPortal;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Guest")]  // Apenas Guest
+[Authorize(Roles = "Guest")]
 public class GuestPortalController : ControllerBase
 {
     private readonly IGuestRegistrationService _guestRegistrationService;

@@ -37,5 +37,6 @@ public class RoomType
     public virtual ICollection<Room> Rooms { get; set; } = new List<Room>();
     public virtual ICollection<RatePlan> RatePlans { get; set; } = new List<RatePlan>();
     public virtual ICollection<BookingRoom> BookingRooms { get; set; } = new List<BookingRoom>();
+    public virtual ICollection<RoomTypeOccupancyPrice> OccupancyPrices { get; set; } = new List<RoomTypeOccupancyPrice>();
 }
 

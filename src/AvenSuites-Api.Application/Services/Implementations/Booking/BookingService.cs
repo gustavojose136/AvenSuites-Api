@@ -11,9 +11,11 @@ public class BookingService : IBookingService
 {
     private readonly IBookingRepository _bookingRepository;
     private readonly IBookingRoomRepository _bookingRoomRepository;
+    private readonly IBookingRoomNightRepository _bookingRoomNightRepository;
     private readonly IHotelRepository _hotelRepository;
     private readonly IGuestRepository _guestRepository;
     private readonly IRoomRepository _roomRepository;
+    private readonly IRoomTypeRepository _roomTypeRepository;
     private readonly IRatePlanRepository _ratePlanRepository;
     private readonly IEmailService _emailService;
     private readonly IEmailTemplateService _emailTemplateService;
@@ -22,9 +24,11 @@ public class BookingService : IBookingService
     public BookingService(
         IBookingRepository bookingRepository,
         IBookingRoomRepository bookingRoomRepository,
+        IBookingRoomNightRepository bookingRoomNightRepository,
         IHotelRepository hotelRepository,
         IGuestRepository guestRepository,
         IRoomRepository roomRepository,
+        IRoomTypeRepository roomTypeRepository,
         IRatePlanRepository ratePlanRepository,
         IEmailService emailService,
         IEmailTemplateService emailTemplateService,
@@ -32,9 +36,11 @@ public class BookingService : IBookingService
     {
         _bookingRepository = bookingRepository;
         _bookingRoomRepository = bookingRoomRepository;
+        _bookingRoomNightRepository = bookingRoomNightRepository;
         _hotelRepository = hotelRepository;
         _guestRepository = guestRepository;
         _roomRepository = roomRepository;
+        _roomTypeRepository = roomTypeRepository;
         _ratePlanRepository = ratePlanRepository;
         _emailService = emailService;
         _emailTemplateService = emailTemplateService;
@@ -70,6 +76,27 @@ public class BookingService : IBookingService
                 return null; // Quarto não disponível
         }
 
+        // Calcular preços dos quartos baseado na ocupação antes de criar o booking
+        var totalOccupancy = (short)(request.Adults + request.Children); // Número total de hóspedes
+        var calculatedRoomPrices = new List<decimal>();
+        
+        foreach (var bookingRoomRequest in request.BookingRooms)
+        {
+            // Calcular preço baseado na ocupação
+            var calculatedPrice = await CalculatePriceByOccupancyAsync(
+                bookingRoomRequest.RoomTypeId, 
+                totalOccupancy, 
+                request.CheckInDate, 
+                request.CheckOutDate);
+            
+            // Usar o preço calculado ou o preço fornecido no request (se fornecido)
+            var finalPrice = bookingRoomRequest.PriceTotal > 0 
+                ? bookingRoomRequest.PriceTotal 
+                : calculatedPrice;
+            
+            calculatedRoomPrices.Add(finalPrice);
+        }
+        
         // Criar booking
         var booking = new AvenSuitesApi.Domain.Entities.Booking
         {
@@ -86,16 +113,22 @@ public class BookingService : IBookingService
             MainGuestId = mainGuest.Id,
             ChannelRef = request.ChannelRef,
             Notes = request.Notes,
-            TotalAmount = CalculateTotalFromRequest(request),
+            TotalAmount = calculatedRoomPrices.Sum(),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
         var createdBooking = await _bookingRepository.AddAsync(booking);
         
-        // Criar booking rooms
+        // Criar booking rooms usando os preços já calculados
+        int roomIndex = 0;
+        var numberOfNights = (request.CheckOutDate - request.CheckInDate).Days;
+        
         foreach (var bookingRoomRequest in request.BookingRooms)
         {
+            var finalPrice = calculatedRoomPrices[roomIndex];
+            var pricePerNight = numberOfNights > 0 ? finalPrice / numberOfNights : 0m;
+            
             var bookingRoom = new AvenSuitesApi.Domain.Entities.BookingRoom
             {
                 Id = Guid.NewGuid(),
@@ -103,7 +136,7 @@ public class BookingService : IBookingService
                 RoomId = bookingRoomRequest.RoomId,
                 RoomTypeId = bookingRoomRequest.RoomTypeId,
                 RatePlanId = bookingRoomRequest.RatePlanId,
-                PriceTotal = bookingRoomRequest.PriceTotal,
+                PriceTotal = finalPrice,
                 Notes = bookingRoomRequest.Notes,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -112,8 +145,41 @@ public class BookingService : IBookingService
             // Adicionar usando o repositório (seguindo SOLID)
             await _bookingRoomRepository.AddAsync(bookingRoom);
 
+            // Criar BookingRoomNight para cada noite da reserva
+            // Isso marca o quarto como ocupado dia a dia
+            var bookingRoomNights = new List<BookingRoomNight>();
+            var currentDate = request.CheckInDate.Date;
+            var checkOutDate = request.CheckOutDate.Date;
+            
+            while (currentDate < checkOutDate)
+            {
+                var bookingRoomNight = new BookingRoomNight
+                {
+                    Id = Guid.NewGuid(),
+                    BookingRoomId = bookingRoom.Id,
+                    RoomId = bookingRoomRequest.RoomId,
+                    StayDate = currentDate,
+                    PriceAmount = pricePerNight,
+                    TaxAmount = 0m
+                };
+                
+                bookingRoomNights.Add(bookingRoomNight);
+                currentDate = currentDate.AddDays(1);
+            }
+
+            // Salvar todas as noites de uma vez
+            if (bookingRoomNights.Any())
+            {
+                await _bookingRoomNightRepository.AddRangeAsync(bookingRoomNights);
+            }
+
             createdBooking.BookingRooms.Add(bookingRoom);
+            roomIndex++;
         }
+        
+        _logger.LogInformation(
+            "Reserva {BookingCode} criada com sucesso. Quartos marcados como ocupados para o período {CheckIn} a {CheckOut}",
+            createdBooking.Code, request.CheckInDate, request.CheckOutDate);
         
         // Buscar dados completos para o e-mail
         var bookingWithDetails = await _bookingRepository.GetByIdWithDetailsAsync(createdBooking.Id);
@@ -301,19 +367,11 @@ public class BookingService : IBookingService
     
     private async Task RegisterStatusChangeAsync(Guid bookingId, string? oldStatus, string newStatus, string? notes)
     {
-        // Nota: Você precisará injetar ApplicationDbContext para salvar o histórico
-        var history = new BookingStatusHistory
-        {
-            Id = Guid.NewGuid(),
-            BookingId = bookingId,
-            OldStatus = oldStatus,
-            NewStatus = newStatus,
-            ChangedAt = DateTime.UtcNow,
-            Notes = notes
-        };
-        
-        // _context.BookingStatusHistories.Add(history);
-        // await _context.SaveChangesAsync();
+        // Nota: Para registrar histórico de status, seria necessário criar um repositório
+        // Por enquanto, apenas logamos a mudança
+        _logger.LogInformation(
+            "Status da reserva {BookingId} alterado de {OldStatus} para {NewStatus}. Notas: {Notes}",
+            bookingId, oldStatus, newStatus, notes);
     }
 
     public async Task<bool> CancelBookingAsync(Guid id, string? reason = null)
@@ -329,6 +387,20 @@ public class BookingService : IBookingService
 
         await RegisterStatusChangeAsync(booking.Id, oldStatus, "CANCELLED", reason);
         await _bookingRepository.UpdateAsync(booking);
+
+        // Remover BookingRoomNight para liberar os quartos
+        // Isso permite que outros façam reserva para aquelas datas
+        foreach (var bookingRoom in booking.BookingRooms)
+        {
+            await _bookingRoomNightRepository.DeleteByBookingRoomIdAsync(bookingRoom.Id);
+            _logger.LogInformation(
+                "Removidos BookingRoomNight para BookingRoom {BookingRoomId} (Quarto {RoomId})",
+                bookingRoom.Id, bookingRoom.RoomId);
+        }
+        
+        _logger.LogInformation(
+            "Reserva {BookingCode} cancelada. Quartos liberados para o período {CheckIn} a {CheckOut}",
+            booking.Code, booking.CheckInDate, booking.CheckOutDate);
 
         // Enviar e-mails de cancelamento
         try
@@ -681,34 +753,92 @@ public class BookingService : IBookingService
         };
     }
     
+    /// <summary>
+    /// Verifica se um quarto está disponível para as datas solicitadas.
+    /// Verifica conflitos com reservas existentes usando BookingRoomNight.
+    /// </summary>
     private async Task<bool> IsRoomAvailableForDatesAsync(Guid roomId, DateTime checkIn, DateTime checkOut)
     {
         var room = await _roomRepository.GetByIdAsync(roomId);
         if (room == null || room.Status != "ACTIVE")
+        {
+            _logger.LogWarning("Quarto {RoomId} não encontrado ou não está ativo", roomId);
             return false;
-
-        // Verificar conflitos com blocos de manutenção
-        // Note: Você precisará injetar ApplicationDbContext para isso
-        // var hasMaintenance = await _context.MaintenanceBlocks
-        //     .AnyAsync(mb => mb.RoomId == roomId && mb.Status == "ACTIVE" 
-        //         && mb.StartDate <= checkOut && mb.EndDate >= checkIn);
+        }
         
-        // Verificar conflitos com reservas existentes
-        var activeBookings = await _bookingRepository.GetByHotelIdAsync(room.HotelId);
-        var hasConflict = activeBookings.Any(b => 
-            b.Status != "CANCELLED"
-            && b.BookingRooms.Any(br => br.RoomId == roomId)
-            && b.CheckInDate < checkOut 
-            && b.CheckOutDate > checkIn);
+        // Verificar conflitos com reservas existentes usando BookingRoomNight
+        // Isso garante que verificamos dia a dia, não apenas o intervalo geral
+        var hasConflict = await _bookingRoomNightRepository.HasConflictAsync(
+            roomId, 
+            checkIn, 
+            checkOut);
 
-        return !hasConflict;
+        if (hasConflict)
+        {
+            _logger.LogWarning("Quarto {RoomId} já possui reserva para o período solicitado ({CheckIn} a {CheckOut})", 
+                roomId, checkIn, checkOut);
+            return false;
+        }
+
+        return true;
     }
     
     private static decimal CalculateTotalFromRequest(BookingCreateRequest request)
     {
         // Calcular total baseado nos quartos solicitados
-        var days = (request.CheckOutDate - request.CheckInDate).Days;
-        return request.BookingRooms.Sum(br => br.PriceTotal) * days;
+        // O PriceTotal já deve estar calculado por noite, então apenas somamos
+        return request.BookingRooms.Sum(br => br.PriceTotal);
+    }
+    
+    /// <summary>
+    /// Calcula o preço total de um quarto baseado no número de hóspedes (ocupação).
+    /// Busca o preço específico para a ocupação ou usa o BasePrice como fallback.
+    /// </summary>
+    private async Task<decimal> CalculatePriceByOccupancyAsync(
+        Guid roomTypeId, 
+        short totalOccupancy, 
+        DateTime checkIn, 
+        DateTime checkOut)
+    {
+        // Buscar o tipo de quarto com os preços de ocupação
+        var roomType = await _roomTypeRepository.GetByIdWithOccupancyPricesAsync(roomTypeId);
+        if (roomType == null)
+        {
+            _logger.LogWarning("RoomType {RoomTypeId} não encontrado para cálculo de preço", roomTypeId);
+            return 0m;
+        }
+        
+        // Buscar o preço específico para a ocupação solicitada
+        var occupancyPrice = roomType.OccupancyPrices
+            .FirstOrDefault(op => op.Occupancy == totalOccupancy);
+        
+        decimal pricePerNight;
+        if (occupancyPrice != null)
+        {
+            // Usar o preço específico da ocupação
+            pricePerNight = occupancyPrice.PricePerNight;
+            _logger.LogInformation(
+                "Usando preço de ocupação {Occupancy}: {Price} para RoomType {RoomTypeId}", 
+                totalOccupancy, pricePerNight, roomTypeId);
+        }
+        else
+        {
+            // Fallback para o BasePrice se não houver preço específico
+            pricePerNight = roomType.BasePrice;
+            _logger.LogInformation(
+                "Usando BasePrice {Price} para RoomType {RoomTypeId} (ocupação {Occupancy} não encontrada)", 
+                pricePerNight, roomTypeId, totalOccupancy);
+        }
+        
+        // Calcular o total para todas as noites
+        var nights = (checkOut - checkIn).Days;
+        if (nights <= 0)
+        {
+            _logger.LogWarning("Número de noites inválido: {Nights}", nights);
+            return 0m;
+        }
+        
+        return pricePerNight * nights;
     }
 }
 

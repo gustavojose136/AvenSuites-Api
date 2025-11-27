@@ -4,6 +4,7 @@ using AvenSuitesApi.Infrastructure.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AvenSuitesApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251127034436_AddRoomTypeOccupancyPriceTable")]
+    partial class AddRoomTypeOccupancyPriceTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1031,7 +1034,7 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                             CpfCnpj = "83.630.657/0001-60",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             HotelId = new Guid("7a326969-3bf6-40d9-96dc-1aecef585000"),
-                            Password = "iXVIDwNjcS4yHK22i0Si7QFn8j18xmYsZHrUhohVyaY=",
+                            Password = "rqvXQIuaDRQlGPZZg4wxHrqntjR6JPbsK2d4MiRCPyI=",
                             SerieNfse = "1",
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Username = "83.630.657/0001-60"
@@ -1478,36 +1481,6 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                         });
                 });
 
-            modelBuilder.Entity("AvenSuitesApi.Domain.Entities.RoomTypeOccupancyPrice", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<short>("Occupancy")
-                        .HasColumnType("smallint");
-
-                    b.Property<decimal>("PricePerNight")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<Guid>("RoomTypeId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RoomTypeId", "Occupancy")
-                        .IsUnique();
-
-                    b.ToTable("RoomTypeOccupancyPrices");
-                });
-
             modelBuilder.Entity("AvenSuitesApi.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1562,7 +1535,7 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                             Email = "admin@avensuites.com",
                             IsActive = true,
                             Name = "Administrator",
-                            PasswordHash = "$argon2i$v=19$m=4096,t=2,p=2$367MWIW+Z68rhA38rCGHVA$CCNTwa0sORwQfAS8iykiTkyj242ONjKumeTstMcZfGc"
+                            PasswordHash = "$argon2i$v=19$m=4096,t=2,p=2$0hOe0imo+2aNKxzp+cSbrA$UhNNj0fJH0HUvwZuHPP0BdRCQNSYGAWZV4MZG6+PC1A"
                         },
                         new
                         {
@@ -1572,7 +1545,7 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                             HotelId = new Guid("7a326969-3bf6-40d9-96dc-1aecef585000"),
                             IsActive = true,
                             Name = "Gustavo",
-                            PasswordHash = "$argon2i$v=19$m=4096,t=2,p=2$DJaHWTMiutsZYZEYlR9now$2+tE9IXvmJD2dltvL/zm4Hdh9xWUuajS0KetYUtTAKk",
+                            PasswordHash = "$argon2i$v=19$m=4096,t=2,p=2$pue9452dqAYn75p66LZ4tg$W3//vxKncXM7mv3WguJ/0dQrPTLWeO4TfPmzDkZKRH0",
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
@@ -1955,17 +1928,6 @@ namespace AvenSuitesApi.Infrastructure.Migrations
                     b.Navigation("Hotel");
                 });
 
-            modelBuilder.Entity("AvenSuitesApi.Domain.Entities.RoomTypeOccupancyPrice", b =>
-                {
-                    b.HasOne("AvenSuitesApi.Domain.Entities.RoomType", "RoomType")
-                        .WithMany("OccupancyPrices")
-                        .HasForeignKey("RoomTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("RoomType");
-                });
-
             modelBuilder.Entity("AvenSuitesApi.Domain.Entities.User", b =>
                 {
                     b.HasOne("AvenSuitesApi.Domain.Entities.Hotel", "Hotel")
@@ -2086,8 +2048,6 @@ namespace AvenSuitesApi.Infrastructure.Migrations
             modelBuilder.Entity("AvenSuitesApi.Domain.Entities.RoomType", b =>
                 {
                     b.Navigation("BookingRooms");
-
-                    b.Navigation("OccupancyPrices");
 
                     b.Navigation("RatePlans");
 
