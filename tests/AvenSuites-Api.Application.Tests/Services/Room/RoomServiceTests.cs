@@ -24,8 +24,8 @@ public class RoomServiceTests
 
         _roomService = new RoomService(
             _roomRepositoryMock.Object,
-            _roomTypeRepositoryMock.Object,
-            _hotelRepositoryMock.Object);
+            _hotelRepositoryMock.Object,
+            _roomTypeRepositoryMock.Object);
     }
 
     [Fact]
@@ -65,12 +65,14 @@ public class RoomServiceTests
             RoomNumber = request.RoomNumber,
             Floor = request.Floor,
             Status = "ACTIVE",
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+            RoomType = roomType
         };
 
         _hotelRepositoryMock.Setup(x => x.GetByIdAsync(hotelId)).ReturnsAsync(hotel);
         _roomTypeRepositoryMock.Setup(x => x.GetByIdAsync(roomTypeId)).ReturnsAsync(roomType);
-        _roomRepositoryMock.Setup(x => x.IsRoomNumberUniqueAsync(hotelId, request.RoomNumber)).ReturnsAsync(true);
+        _roomRepositoryMock.Setup(x => x.IsRoomNumberUniqueAsync(hotelId, request.RoomNumber, null)).ReturnsAsync(true);
         _roomRepositoryMock.Setup(x => x.AddAsync(It.IsAny<AvenSuitesApi.Domain.Entities.Room>())).ReturnsAsync(room);
 
         // Act
