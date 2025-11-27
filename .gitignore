@@ -367,3 +367,8 @@ FodyWeavers.xsd
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+# ASP.NET Core appsettings files (contain sensitive configuration)
+appsettings.json
+appsettings.*.json
+!appsettings.Development.json
