@@ -14,10 +14,30 @@ public class BookingRoomNightRepository : IBookingRoomNightRepository
         _context = context;
     }
 
+    public async Task<BookingRoomNight?> GetByIdAsync(Guid id)
+    {
+        return await _context.BookingRoomNights
+            .Include(brn => brn.BookingRoom)
+            .Include(brn => brn.Room)
+            .FirstOrDefaultAsync(brn => brn.Id == id);
+    }
+
     public async Task<IEnumerable<BookingRoomNight>> GetByBookingRoomIdAsync(Guid bookingRoomId)
     {
         return await _context.BookingRoomNights
+            .Include(brn => brn.Room)
             .Where(brn => brn.BookingRoomId == bookingRoomId)
+            .OrderBy(brn => brn.StayDate)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<BookingRoomNight>> GetByRoomIdAsync(Guid roomId)
+    {
+        return await _context.BookingRoomNights
+            .Include(brn => brn.BookingRoom)
+                .ThenInclude(br => br.Booking)
+            .Where(brn => brn.RoomId == roomId)
+            .OrderBy(brn => brn.StayDate)
             .ToListAsync();
     }
 
@@ -26,28 +46,11 @@ public class BookingRoomNightRepository : IBookingRoomNightRepository
         return await _context.BookingRoomNights
             .Include(brn => brn.BookingRoom)
                 .ThenInclude(br => br.Booking)
-            .Where(brn => brn.RoomId == roomId
-                && brn.StayDate >= startDate.Date
+            .Where(brn => brn.RoomId == roomId 
+                && brn.StayDate >= startDate.Date 
                 && brn.StayDate < endDate.Date)
+            .OrderBy(brn => brn.StayDate)
             .ToListAsync();
-    }
-
-    public async Task<bool> HasConflictAsync(Guid roomId, DateTime startDate, DateTime endDate, Guid? excludeBookingRoomId = null)
-    {
-        var query = _context.BookingRoomNights
-            .Include(brn => brn.BookingRoom)
-                .ThenInclude(br => br.Booking)
-            .Where(brn => brn.RoomId == roomId
-                && brn.BookingRoom.Booking.Status != "CANCELLED"
-                && brn.StayDate >= startDate.Date
-                && brn.StayDate < endDate.Date);
-
-        if (excludeBookingRoomId.HasValue)
-        {
-            query = query.Where(brn => brn.BookingRoomId != excludeBookingRoomId.Value);
-        }
-
-        return await query.AnyAsync();
     }
 
     public async Task<BookingRoomNight> AddAsync(BookingRoomNight bookingRoomNight)
@@ -60,13 +63,20 @@ public class BookingRoomNightRepository : IBookingRoomNightRepository
 
     public async Task AddRangeAsync(IEnumerable<BookingRoomNight> bookingRoomNights)
     {
-        var nightsList = bookingRoomNights.ToList();
-        foreach (var night in nightsList)
+        var nights = bookingRoomNights.ToList();
+        foreach (var night in nights)
         {
             night.CreatedAt = DateTime.UtcNow;
         }
-        _context.BookingRoomNights.AddRange(nightsList);
+        await _context.BookingRoomNights.AddRangeAsync(nights);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<BookingRoomNight> UpdateAsync(BookingRoomNight bookingRoomNight)
+    {
+        _context.BookingRoomNights.Update(bookingRoomNight);
+        await _context.SaveChangesAsync();
+        return bookingRoomNight;
     }
 
     public async Task DeleteAsync(Guid id)
@@ -92,5 +102,25 @@ public class BookingRoomNightRepository : IBookingRoomNightRepository
         }
     }
 
+    public async Task<bool> HasConflictAsync(Guid roomId, DateTime startDate, DateTime endDate, Guid? excludeBookingRoomId = null)
+    {
+        var query = _context.BookingRoomNights
+            .Where(brn => brn.RoomId == roomId
+                && brn.StayDate >= startDate.Date
+                && brn.StayDate < endDate.Date);
+
+        // Excluir noites de um BookingRoom específico (útil ao atualizar uma reserva)
+        if (excludeBookingRoomId.HasValue)
+        {
+            query = query.Where(brn => brn.BookingRoomId != excludeBookingRoomId.Value);
+        }
+
+        return await query.AnyAsync();
+    }
+
+    public async Task<bool> ExistsAsync(Guid id)
+    {
+        return await _context.BookingRoomNights.AnyAsync(brn => brn.Id == id);
+    }
 }
 

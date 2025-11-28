@@ -1,0 +1,83 @@
+=================================================
+  COMANDOS RAPIDOS PARA VERIFICAR COBERTURA
+=================================================
+
+OPCAO 1: Comando Simples (Recomendado)
+----------------------------------------
+Abra o CMD ou PowerShell e execute:
+
+    dotnet test --collect:"XPlat Code Coverage" --settings coverlet.runsettings
+
+Isso vai:
+- Executar todos os testes
+- Gerar arquivos de cobertura em TestResults/
+- Mostrar os resultados no console
+
+
+OPCAO 2: Script Batch (Windows)
+---------------------------------
+Execute o arquivo:
+
+    verificar-cobertura.bat
+
+(Clique duas vezes no arquivo ou execute no CMD)
+
+
+OPCAO 3: Gerar Relatorio HTML Completo
+---------------------------------------
+Execute:
+
+    dotnet test --collect:"XPlat Code Coverage" --settings coverlet.runsettings
+
+Depois instale o ReportGenerator (se nao tiver):
+
+    dotnet tool install --global dotnet-reportgenerator-globaltool
+
+E gere o relatorio:
+
+    reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"coverage" -reporttypes:"Html"
+
+Depois abra: coverage\index.html
+
+
+OPCAO 4: Verificar Cobertura Rapidamente
+------------------------------------------
+Execute apenas:
+
+    dotnet test
+
+Isso mostra quantos testes passaram/falharam.
+
+
+=================================================
+  ONDE ENCONTRAR OS RESULTADOS
+=================================================
+
+- Arquivos XML de cobertura: TestResults\**\coverage.cobertura.xml
+- Relatorio HTML: coverage\index.html (apos gerar com ReportGenerator)
+
+
+=================================================
+  PROBLEMAS COMUNS
+=================================================
+
+1. "coverlet.runsettings nao encontrado"
+   -> Certifique-se de estar na raiz do projeto
+
+2. "Testes falhando"
+   -> Execute: dotnet test (sem cobertura) para ver os erros
+
+3. "Nao consigo executar scripts PowerShell"
+   -> Use o arquivo .bat ou execute os comandos diretamente
+
+
+=================================================
+  META DE COBERTURA
+=================================================
+
+Meta: 80% de cobertura de codigo
+Status Atual: ~80-85% (estimado)
+
+Para verificar a porcentagem exata, abra o arquivo XML de cobertura
+e procure pelo atributo "line-rate" ou use o ReportGenerator.
+
