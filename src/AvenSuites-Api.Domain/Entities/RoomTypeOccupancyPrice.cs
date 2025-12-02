@@ -23,3 +23,4 @@ public class RoomTypeOccupancyPrice
     public virtual RoomType RoomType { get; set; } = null!;
 }
 
+

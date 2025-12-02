@@ -17,3 +17,4 @@ public interface IBookingRoomNightRepository
     Task<bool> ExistsAsync(Guid id);
 }
 
+
