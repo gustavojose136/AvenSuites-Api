@@ -18,91 +18,45 @@ public class EmailTemplateService : IEmailTemplateService
     <title>Bem-vindo ao {hotelName}</title>
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f7fa; line-height: 1.6; }}
-        .container {{ max-width: 600px; margin: 0 auto; background-color: #ffffff; }}
-        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center; color: white; }}
-        .header h1 {{ font-size: 28px; margin-bottom: 10px; font-weight: 600; }}
-        .content {{ padding: 40px 30px; }}
-        .greeting {{ font-size: 24px; color: #2d3748; margin-bottom: 20px; font-weight: 600; }}
-        .message {{ font-size: 16px; color: #4a5568; margin-bottom: 25px; line-height: 1.8; }}
-        .highlight-box {{ background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 25px; border-radius: 12px; margin: 30px 0; text-align: center; color: white; }}
-        .highlight-box h2 {{ font-size: 22px; margin-bottom: 10px; }}
-        .highlight-box p {{ font-size: 16px; opacity: 0.95; }}
-        .features {{ margin: 30px 0; }}
-        .feature-item {{ display: flex; align-items: center; margin-bottom: 20px; padding: 15px; background-color: #f7fafc; border-radius: 8px; }}
-        .feature-icon {{ font-size: 24px; margin-right: 15px; }}
-        .feature-text {{ flex: 1; color: #2d3748; font-size: 15px; }}
-        .cta-button {{ display: inline-block; padding: 15px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 20px 0; transition: transform 0.2s; }}
-        .cta-button:hover {{ transform: translateY(-2px); }}
-        .footer {{ background-color: #2d3748; padding: 30px; text-align: center; color: #a0aec0; font-size: 14px; }}
-        .footer a {{ color: #667eea; text-decoration: none; }}
-        .divider {{ height: 2px; background: linear-gradient(90deg, transparent, #e2e8f0, transparent); margin: 30px 0; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8f9fa; line-height: 1.6; color: #212529; }}
+        .container {{ max-width: 600px; margin: 40px auto; background-color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }}
+        .header {{ background-color: #1a1a1a; padding: 50px 40px; text-align: center; border-bottom: 3px solid #d4af37; }}
+        .header h1 {{ font-size: 32px; font-weight: 300; letter-spacing: 2px; color: #ffffff; margin-bottom: 8px; }}
+        .header p {{ color: #d4af37; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; }}
+        .content {{ padding: 50px 40px; }}
+        .greeting {{ font-size: 28px; color: #1a1a1a; margin-bottom: 24px; font-weight: 400; letter-spacing: -0.5px; }}
+        .message {{ font-size: 16px; color: #495057; margin-bottom: 32px; line-height: 1.8; }}
+        .divider {{ height: 1px; background-color: #e9ecef; margin: 40px 0; }}
+        .footer {{ background-color: #1a1a1a; padding: 40px; text-align: center; color: #adb5bd; font-size: 13px; }}
+        .footer p {{ margin: 8px 0; }}
+        .footer strong {{ color: #ffffff; }}
     </style>
 </head>
 <body>
     <div class=""container"">
         <div class=""header"">
-            <h1>🏨 {hotelName}</h1>
-            <p style=""margin-top: 10px; opacity: 0.95;"">Sua experiência começa aqui</p>
+            <h1>{hotelName}</h1>
+            <p>Bem-vindo</p>
         </div>
         
         <div class=""content"">
-            <div class=""greeting"">Olá, {guestName}!</div>
+            <div class=""greeting"">Olá, {guestName}</div>
             
             <div class=""message"">
-                É com grande prazer que damos as boas-vindas ao <strong>{hotelName}</strong>! 
-                Sua conta foi criada com sucesso e agora você tem acesso a todos os nossos serviços.
-            </div>
-            
-            <div class=""highlight-box"">
-                <h2>✨ Sua jornada começa agora</h2>
-                <p>Explore todas as comodidades que preparamos para você</p>
-            </div>
-            
-            <div class=""features"">
-                <div class=""feature-item"">
-                    <div class=""feature-icon"">📱</div>
-                    <div class=""feature-text"">
-                        <strong>Portal do Hóspede:</strong> Acesse suas reservas, perfil e muito mais
-                    </div>
-                </div>
-                <div class=""feature-item"">
-                    <div class=""feature-icon"">🎫</div>
-                    <div class=""feature-text"">
-                        <strong>Reservas Rápidas:</strong> Faça suas reservas de forma simples e segura
-                    </div>
-                </div>
-                <div class=""feature-item"">
-                    <div class=""feature-icon"">🔔</div>
-                    <div class=""feature-text"">
-                        <strong>Notificações:</strong> Receba lembretes e atualizações sobre suas reservas
-                    </div>
-                </div>
-                <div class=""feature-item"">
-                    <div class=""feature-icon"">💳</div>
-                    <div class=""feature-text"">
-                        <strong>Pagamento Seguro:</strong> Processe seus pagamentos com total segurança
-                    </div>
-                </div>
-            </div>
-            
-            <div style=""text-align: center; margin: 30px 0;"">
-                <a href=""#"" class=""cta-button"">Acessar Portal do Hóspede</a>
+                Sua conta foi criada com sucesso. Agora você pode fazer reservas, gerenciar seu perfil e acompanhar suas estadias através do nosso sistema.
             </div>
             
             <div class=""divider""></div>
             
             <div class=""message"">
-                Se você tiver alguma dúvida ou precisar de ajuda, nossa equipe está sempre pronta para atendê-lo.
-                <br><br>
-                Estamos ansiosos para proporcionar uma experiência inesquecível!
+                Em caso de dúvidas, nossa equipe está disponível para ajudar.
             </div>
         </div>
         
         <div class=""footer"">
             <p><strong>{hotelName}</strong></p>
-            <p style=""margin-top: 10px;"">Este é um e-mail automático, por favor não responda.</p>
-            <p style=""margin-top: 5px; font-size: 12px;"">© {DateTime.Now.Year} {hotelName}. Todos os direitos reservados.</p>
+            <p>Este é um e-mail automático. Por favor, não responda.</p>
+            <p style=""margin-top: 20px; font-size: 11px; color: #6c757d;"">© {DateTime.Now.Year} {hotelName}. Todos os direitos reservados.</p>
         </div>
     </div>
 </body>
@@ -123,16 +77,16 @@ public class EmailTemplateService : IEmailTemplateService
         string? hotelPhone = null)
     {
         var roomsHtml = string.Join("", rooms.Select((room, index) => $@"
-            <div style=""background-color: #f7fafc; padding: 20px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #667eea;"">
+            <div style=""background-color: #f8f9fa; padding: 20px; margin-bottom: 12px; border-left: 3px solid #1a1a1a;"">
                 <div style=""display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;"">
                     <div>
-                        <div style=""font-size: 18px; font-weight: 600; color: #2d3748; margin-bottom: 5px;"">
-                            🏨 Quarto {room.RoomNumber}
+                        <div style=""font-size: 17px; font-weight: 500; color: #1a1a1a; margin-bottom: 4px;"">
+                            Quarto {room.RoomNumber}
                         </div>
-                        <div style=""color: #718096; font-size: 14px;"">{room.RoomTypeName}</div>
+                        <div style=""color: #6c757d; font-size: 14px; font-weight: 300;"">{room.RoomTypeName}</div>
                     </div>
                     <div style=""text-align: right;"">
-                        <div style=""font-size: 20px; font-weight: 700; color: #667eea;"">
+                        <div style=""font-size: 18px; font-weight: 500; color: #1a1a1a;"">
                             {FormatCurrency(totalAmount / rooms.Count, currency)}
                         </div>
                     </div>
@@ -148,44 +102,45 @@ public class EmailTemplateService : IEmailTemplateService
     <title>Confirmação de Reserva - {hotelName}</title>
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f7fa; line-height: 1.6; }}
-        .container {{ max-width: 600px; margin: 0 auto; background-color: #ffffff; }}
-        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center; color: white; }}
-        .header h1 {{ font-size: 28px; margin-bottom: 10px; font-weight: 600; }}
-        .ticket-badge {{ display: inline-block; background-color: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 20px; font-size: 14px; margin-top: 10px; }}
-        .content {{ padding: 40px 30px; }}
-        .success-icon {{ text-align: center; font-size: 64px; margin-bottom: 20px; }}
-        .greeting {{ font-size: 24px; color: #2d3748; margin-bottom: 20px; font-weight: 600; text-align: center; }}
-        .booking-code {{ background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 12px; text-align: center; color: white; margin: 25px 0; }}
-        .booking-code-label {{ font-size: 14px; opacity: 0.9; margin-bottom: 8px; }}
-        .booking-code-value {{ font-size: 32px; font-weight: 700; letter-spacing: 2px; }}
-        .info-section {{ margin: 25px 0; }}
-        .info-row {{ display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #e2e8f0; }}
-        .info-label {{ color: #718096; font-size: 14px; }}
-        .info-value {{ color: #2d3748; font-size: 16px; font-weight: 600; }}
-        .rooms-section {{ margin: 30px 0; }}
-        .rooms-title {{ font-size: 20px; color: #2d3748; margin-bottom: 20px; font-weight: 600; }}
-        .total-section {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 12px; margin: 30px 0; text-align: center; color: white; }}
-        .total-label {{ font-size: 16px; opacity: 0.9; margin-bottom: 8px; }}
-        .total-value {{ font-size: 36px; font-weight: 700; }}
-        .footer {{ background-color: #2d3748; padding: 30px; text-align: center; color: #a0aec0; font-size: 14px; }}
-        .footer-info {{ margin-top: 15px; line-height: 1.8; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8f9fa; line-height: 1.6; color: #212529; }}
+        .container {{ max-width: 600px; margin: 40px auto; background-color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }}
+        .header {{ background-color: #1a1a1a; padding: 50px 40px; text-align: center; border-bottom: 3px solid #d4af37; }}
+        .header h1 {{ font-size: 28px; font-weight: 300; letter-spacing: 1px; color: #ffffff; }}
+        .header p {{ color: #d4af37; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; margin-top: 8px; }}
+        .content {{ padding: 50px 40px; }}
+        .greeting {{ font-size: 24px; color: #1a1a1a; margin-bottom: 32px; font-weight: 400; }}
+        .booking-code {{ background-color: #1a1a1a; padding: 30px; text-align: center; margin: 32px 0; }}
+        .booking-code-label {{ font-size: 11px; color: #d4af37; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }}
+        .booking-code-value {{ font-size: 28px; font-weight: 300; letter-spacing: 3px; color: #ffffff; }}
+        .info-section {{ margin: 32px 0; }}
+        .info-row {{ display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid #e9ecef; }}
+        .info-label {{ color: #6c757d; font-size: 14px; font-weight: 400; }}
+        .info-value {{ color: #1a1a1a; font-size: 15px; font-weight: 500; }}
+        .rooms-section {{ margin: 32px 0; }}
+        .rooms-title {{ font-size: 16px; color: #1a1a1a; margin-bottom: 20px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }}
+        .total-section {{ background-color: #1a1a1a; padding: 30px; margin: 32px 0; text-align: center; }}
+        .total-label {{ font-size: 12px; color: #d4af37; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }}
+        .total-value {{ font-size: 32px; font-weight: 300; color: #ffffff; }}
+        .footer {{ background-color: #1a1a1a; padding: 40px; text-align: center; color: #adb5bd; font-size: 13px; }}
+        .footer p {{ margin: 8px 0; }}
+        .footer strong {{ color: #ffffff; }}
+        .notice {{ background-color: #f8f9fa; border-left: 3px solid #1a1a1a; padding: 20px; margin: 32px 0; }}
+        .notice-title {{ font-size: 14px; font-weight: 500; color: #1a1a1a; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .notice-text {{ color: #495057; font-size: 14px; line-height: 1.8; }}
     </style>
 </head>
 <body>
     <div class=""container"">
         <div class=""header"">
-            <h1>🎫 Confirmação de Reserva</h1>
-            <div class=""ticket-badge"">{hotelName}</div>
+            <h1>Confirmação de Reserva</h1>
+            <p>{hotelName}</p>
         </div>
         
         <div class=""content"">
-            <div class=""success-icon"">✅</div>
+            <div class=""greeting"">Olá, {guestName}</div>
             
-            <div class=""greeting"">Olá, {guestName}!</div>
-            
-            <div style=""text-align: center; color: #4a5568; margin-bottom: 30px; font-size: 16px;"">
-                Sua reserva foi confirmada com sucesso! Guarde este e-mail como comprovante.
+            <div style=""color: #495057; margin-bottom: 32px; font-size: 15px; line-height: 1.8;"">
+                Sua reserva foi confirmada. Guarde este e-mail como comprovante.
             </div>
             
             <div class=""booking-code"">
@@ -195,21 +150,21 @@ public class EmailTemplateService : IEmailTemplateService
             
             <div class=""info-section"">
                 <div class=""info-row"">
-                    <div class=""info-label"">📅 Check-in</div>
+                    <div class=""info-label"">Check-in</div>
                     <div class=""info-value"">{checkInDate:dd/MM/yyyy} às 14:00</div>
                 </div>
                 <div class=""info-row"">
-                    <div class=""info-label"">📅 Check-out</div>
+                    <div class=""info-label"">Check-out</div>
                     <div class=""info-value"">{checkOutDate:dd/MM/yyyy} às 12:00</div>
                 </div>
                 <div class=""info-row"">
-                    <div class=""info-label"">🌙 Noites</div>
+                    <div class=""info-label"">Noites</div>
                     <div class=""info-value"">{nights} {(nights == 1 ? "noite" : "noites")}</div>
                 </div>
             </div>
             
             <div class=""rooms-section"">
-                <div class=""rooms-title"">🏨 Quartos Reservados</div>
+                <div class=""rooms-title"">Quartos Reservados</div>
                 {roomsHtml}
             </div>
             
@@ -219,33 +174,28 @@ public class EmailTemplateService : IEmailTemplateService
             </div>
             
             {(string.IsNullOrWhiteSpace(hotelAddress) ? "" : $@"
-            <div style=""background-color: #f7fafc; padding: 20px; border-radius: 10px; margin: 25px 0;"">
-                <div style=""font-size: 16px; font-weight: 600; color: #2d3748; margin-bottom: 10px;"">📍 Localização</div>
-                <div style=""color: #4a5568; line-height: 1.8;"">
+            <div style=""background-color: #f8f9fa; padding: 24px; margin: 32px 0; border-left: 3px solid #1a1a1a;"">
+                <div style=""font-size: 14px; font-weight: 500; color: #1a1a1a; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;"">Localização</div>
+                <div style=""color: #495057; line-height: 1.8; font-size: 14px;"">
                     {hotelName}<br>
                     {hotelAddress}
-                    {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<br>📞 {hotelPhone}")}
+                    {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<br>{hotelPhone}")}
                 </div>
             </div>")}
             
-            <div style=""background-color: #fff5f5; border-left: 4px solid #f56565; padding: 20px; border-radius: 8px; margin: 25px 0;"">
-                <div style=""font-size: 16px; font-weight: 600; color: #c53030; margin-bottom: 10px;"">⚠️ Importante</div>
-                <div style=""color: #742a2a; font-size: 14px; line-height: 1.8;"">
-                    • Apresente este comprovante no check-in<br>
-                    • Chegada: a partir das 14:00<br>
-                    • Saída: até às 12:00<br>
-                    • Em caso de dúvidas, entre em contato conosco
+            <div class=""notice"">
+                <div class=""notice-title"">Informações Importantes</div>
+                <div class=""notice-text"">
+                    Apresente este comprovante no check-in. Horário de chegada: a partir das 14:00. Horário de saída: até às 12:00. Em caso de dúvidas, entre em contato conosco.
                 </div>
             </div>
         </div>
         
         <div class=""footer"">
             <p><strong>{hotelName}</strong></p>
-            <div class=""footer-info"">
-                {(string.IsNullOrWhiteSpace(hotelAddress) ? "" : $@"<p>{hotelAddress}</p>")}
-                {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<p>📞 {hotelPhone}</p>")}
-            </div>
-            <p style=""margin-top: 15px; font-size: 12px;"">© {DateTime.Now.Year} {hotelName}. Todos os direitos reservados.</p>
+            {(string.IsNullOrWhiteSpace(hotelAddress) ? "" : $@"<p>{hotelAddress}</p>")}
+            {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<p>{hotelPhone}</p>")}
+            <p style=""margin-top: 20px; font-size: 11px; color: #6c757d;"">© {DateTime.Now.Year} {hotelName}. Todos os direitos reservados.</p>
         </div>
     </div>
 </body>
@@ -264,9 +214,9 @@ public class EmailTemplateService : IEmailTemplateService
         string? hotelPhone = null)
     {
         var roomsHtml = string.Join("", rooms.Select(room => $@"
-            <div style=""background-color: #f7fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #48bb78;"">
-                <div style=""font-size: 16px; font-weight: 600; color: #2d3748;"">
-                    🏨 Quarto {room.RoomNumber} - {room.RoomTypeName}
+            <div style=""background-color: #f8f9fa; padding: 16px; margin-bottom: 10px; border-left: 3px solid #1a1a1a;"">
+                <div style=""font-size: 15px; font-weight: 500; color: #1a1a1a;"">
+                    Quarto {room.RoomNumber} - {room.RoomTypeName}
                 </div>
             </div>"));
 
@@ -281,45 +231,40 @@ public class EmailTemplateService : IEmailTemplateService
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f7fa; line-height: 1.6; }}
         .container {{ max-width: 600px; margin: 0 auto; background-color: #ffffff; }}
-        .header {{ background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); padding: 40px 30px; text-align: center; color: white; }}
-        .header h1 {{ font-size: 28px; margin-bottom: 10px; font-weight: 600; }}
-        .content {{ padding: 40px 30px; }}
-        .reminder-icon {{ text-align: center; font-size: 64px; margin-bottom: 20px; }}
-        .greeting {{ font-size: 24px; color: #2d3748; margin-bottom: 20px; font-weight: 600; text-align: center; }}
-        .countdown-box {{ background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%); padding: 25px; border-radius: 12px; text-align: center; color: white; margin: 25px 0; }}
-        .countdown-label {{ font-size: 14px; opacity: 0.9; margin-bottom: 8px; }}
-        .countdown-value {{ font-size: 36px; font-weight: 700; }}
-        .info-section {{ margin: 25px 0; }}
-        .info-row {{ display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #e2e8f0; }}
-        .info-label {{ color: #718096; font-size: 14px; }}
-        .info-value {{ color: #2d3748; font-size: 16px; font-weight: 600; }}
-        .rooms-section {{ margin: 30px 0; }}
-        .rooms-title {{ font-size: 20px; color: #2d3748; margin-bottom: 20px; font-weight: 600; }}
-        .booking-code {{ background-color: #edf2f7; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0; }}
-        .booking-code-label {{ font-size: 12px; color: #718096; margin-bottom: 5px; }}
-        .booking-code-value {{ font-size: 24px; font-weight: 700; color: #2d3748; letter-spacing: 1px; }}
-        .footer {{ background-color: #2d3748; padding: 30px; text-align: center; color: #a0aec0; font-size: 14px; }}
+        .header {{ background-color: #1a1a1a; padding: 50px 40px; text-align: center; border-bottom: 3px solid #ffc107; }}
+        .header h1 {{ font-size: 28px; font-weight: 300; letter-spacing: 1px; color: #ffffff; }}
+        .header p {{ color: #ffc107; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; margin-top: 8px; }}
+        .content {{ padding: 50px 40px; }}
+        .greeting {{ font-size: 24px; color: #1a1a1a; margin-bottom: 32px; font-weight: 400; }}
+        .booking-code {{ background-color: #f8f9fa; padding: 30px; text-align: center; margin: 32px 0; border: 1px solid #dee2e6; }}
+        .booking-code-label {{ font-size: 11px; color: #6c757d; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }}
+        .booking-code-value {{ font-size: 28px; font-weight: 300; letter-spacing: 3px; color: #1a1a1a; }}
+        .info-section {{ margin: 32px 0; }}
+        .info-row {{ display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid #e9ecef; }}
+        .info-label {{ color: #6c757d; font-size: 14px; font-weight: 400; }}
+        .info-value {{ color: #1a1a1a; font-size: 15px; font-weight: 500; }}
+        .rooms-section {{ margin: 32px 0; }}
+        .rooms-title {{ font-size: 16px; color: #1a1a1a; margin-bottom: 20px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }}
+        .notice {{ background-color: #f8f9fa; border-left: 3px solid #1a1a1a; padding: 20px; margin: 32px 0; }}
+        .notice-title {{ font-size: 14px; font-weight: 500; color: #1a1a1a; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .notice-text {{ color: #495057; font-size: 14px; line-height: 1.8; }}
+        .footer {{ background-color: #1a1a1a; padding: 40px; text-align: center; color: #adb5bd; font-size: 13px; }}
+        .footer p {{ margin: 8px 0; }}
+        .footer strong {{ color: #ffffff; }}
     </style>
 </head>
 <body>
     <div class=""container"">
         <div class=""header"">
-            <h1>🔔 Lembrete de Reserva</h1>
-            <p style=""margin-top: 10px; opacity: 0.95;"">Sua estadia está chegando!</p>
+            <h1>Lembrete de Reserva</h1>
+            <p>{hotelName}</p>
         </div>
         
         <div class=""content"">
-            <div class=""reminder-icon"">⏰</div>
+            <div class=""greeting"">Olá, {guestName}</div>
             
-            <div class=""greeting"">Olá, {guestName}!</div>
-            
-            <div style=""text-align: center; color: #4a5568; margin-bottom: 30px; font-size: 16px;"">
-                Faltam apenas <strong>3 dias</strong> para sua reserva no <strong>{hotelName}</strong>!
-            </div>
-            
-            <div class=""countdown-box"">
-                <div class=""countdown-label"">Sua estadia começa em</div>
-                <div class=""countdown-value"">{checkInDate:dd/MM/yyyy}</div>
+            <div style=""color: #495057; margin-bottom: 32px; font-size: 15px; line-height: 1.8;"">
+                Faltam 3 dias para sua reserva. Seguem os detalhes da sua estadia.
             </div>
             
             <div class=""booking-code"">
@@ -327,57 +272,51 @@ public class EmailTemplateService : IEmailTemplateService
                 <div class=""booking-code-value"">{bookingCode}</div>
             </div>
             
+            <div style=""background-color: #1a1a1a; padding: 24px; margin: 32px 0; text-align: center; color: #ffffff;"">
+                <div style=""font-size: 11px; color: #d4af37; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;"">Check-in</div>
+                <div style=""font-size: 24px; font-weight: 300; letter-spacing: 1px;"">{checkInDate:dd/MM/yyyy}</div>
+                <div style=""font-size: 13px; color: #adb5bd; margin-top: 8px;"">A partir das 14:00</div>
+            </div>
+            
             <div class=""info-section"">
                 <div class=""info-row"">
-                    <div class=""info-label"">📅 Check-in</div>
-                    <div class=""info-value"">{checkInDate:dd/MM/yyyy} às 14:00</div>
-                </div>
-                <div class=""info-row"">
-                    <div class=""info-label"">📅 Check-out</div>
+                    <div class=""info-label"">Check-out</div>
                     <div class=""info-value"">{checkOutDate:dd/MM/yyyy} às 12:00</div>
                 </div>
                 <div class=""info-row"">
-                    <div class=""info-label"">🌙 Noites</div>
+                    <div class=""info-label"">Noites</div>
                     <div class=""info-value"">{nights} {(nights == 1 ? "noite" : "noites")}</div>
                 </div>
             </div>
             
             <div class=""rooms-section"">
-                <div class=""rooms-title"">🏨 Quartos Reservados</div>
+                <div class=""rooms-title"">Quartos Reservados</div>
                 {roomsHtml}
             </div>
             
             {(string.IsNullOrWhiteSpace(hotelAddress) ? "" : $@"
-            <div style=""background-color: #f0fff4; border-left: 4px solid #48bb78; padding: 20px; border-radius: 8px; margin: 25px 0;"">
-                <div style=""font-size: 16px; font-weight: 600; color: #22543d; margin-bottom: 10px;"">📍 Como Chegar</div>
-                <div style=""color: #2f855a; line-height: 1.8; font-size: 14px;"">
+            <div style=""background-color: #f8f9fa; padding: 24px; margin: 32px 0; border-left: 3px solid #1a1a1a;"">
+                <div style=""font-size: 14px; font-weight: 500; color: #1a1a1a; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;"">Localização</div>
+                <div style=""color: #495057; line-height: 1.8; font-size: 14px;"">
                     {hotelName}<br>
                     {hotelAddress}
-                    {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<br>📞 {hotelPhone}")}
+                    {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<br>{hotelPhone}")}
                 </div>
             </div>")}
             
-            <div style=""background-color: #ebf8ff; border-left: 4px solid #4299e1; padding: 20px; border-radius: 8px; margin: 25px 0;"">
-                <div style=""font-size: 16px; font-weight: 600; color: #2c5282; margin-bottom: 10px;"">💡 Dicas para sua estadia</div>
-                <div style=""color: #2b6cb0; font-size: 14px; line-height: 1.8;"">
-                    • Chegada: a partir das 14:00<br>
-                    • Saída: até às 12:00<br>
-                    • Traga um documento com foto para o check-in<br>
-                    • Em caso de dúvidas, entre em contato conosco
+            <div class=""notice"">
+                <div class=""notice-title"">Informações</div>
+                <div class=""notice-text"">
+                    Chegada: a partir das 14:00. Saída: até às 12:00. Traga um documento com foto para o check-in. Em caso de dúvidas, entre em contato conosco.
                 </div>
-            </div>
-            
-            <div style=""text-align: center; margin: 30px 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white;"">
-                <div style=""font-size: 18px; font-weight: 600; margin-bottom: 10px;"">Estamos ansiosos para recebê-lo!</div>
-                <div style=""font-size: 14px; opacity: 0.9;"">Prepare-se para uma experiência inesquecível</div>
             </div>
         </div>
         
         <div class=""footer"">
             <p><strong>{hotelName}</strong></p>
-            {(string.IsNullOrWhiteSpace(hotelAddress) ? "" : $@"<p style=""margin-top: 10px;"">{hotelAddress}</p>")}
-            {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<p>📞 {hotelPhone}</p>")}
-            <p style=""margin-top: 15px; font-size: 12px;"">© {DateTime.Now.Year} {hotelName}. Todos os direitos reservados.</p>
+            {(string.IsNullOrWhiteSpace(hotelAddress) ? "" : $@"<p>{hotelAddress}</p>")}
+            {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<p>{hotelPhone}</p>")}
+            <p style=""margin-top: 20px; font-size: 11px; color: #6c757d;"">© {DateTime.Now.Year} {hotelName}. Todos os direitos reservados.</p>
         </div>
     </div>
 </body>
@@ -1132,9 +1071,9 @@ public class EmailTemplateService : IEmailTemplateService
         string? hotelPhone = null)
     {
         var roomsHtml = string.Join("", rooms.Select(room => $@"
-            <div style=""background-color: #f7fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #48bb78;"">
-                <div style=""font-size: 16px; font-weight: 600; color: #2d3748;"">
-                    🏨 Quarto {room.RoomNumber} - {room.RoomTypeName}
+            <div style=""background-color: #f8f9fa; padding: 16px; margin-bottom: 10px; border-left: 3px solid #1a1a1a;"">
+                <div style=""font-size: 15px; font-weight: 500; color: #1a1a1a;"">
+                    Quarto {room.RoomNumber} - {room.RoomTypeName}
                 </div>
             </div>"));
 
@@ -1147,88 +1086,82 @@ public class EmailTemplateService : IEmailTemplateService
     <title>Reserva Confirmada - {hotelName}</title>
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f7fa; line-height: 1.6; }}
-        .container {{ max-width: 600px; margin: 0 auto; background-color: #ffffff; }}
-        .header {{ background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); padding: 40px 30px; text-align: center; color: white; }}
-        .header h1 {{ font-size: 28px; margin-bottom: 10px; font-weight: 600; }}
-        .content {{ padding: 40px 30px; }}
-        .success-icon {{ text-align: center; font-size: 64px; margin-bottom: 20px; }}
-        .greeting {{ font-size: 24px; color: #2d3748; margin-bottom: 20px; font-weight: 600; text-align: center; }}
-        .success-box {{ background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); padding: 25px; border-radius: 12px; text-align: center; color: white; margin: 25px 0; }}
-        .success-box h2 {{ font-size: 24px; margin-bottom: 8px; }}
-        .info-section {{ margin: 25px 0; }}
-        .info-row {{ display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #e2e8f0; }}
-        .info-label {{ color: #718096; font-size: 14px; }}
-        .info-value {{ color: #2d3748; font-size: 16px; font-weight: 600; }}
-        .footer {{ background-color: #2d3748; padding: 30px; text-align: center; color: #a0aec0; font-size: 14px; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8f9fa; line-height: 1.6; color: #212529; }}
+        .container {{ max-width: 600px; margin: 40px auto; background-color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }}
+        .header {{ background-color: #1a1a1a; padding: 50px 40px; text-align: center; border-bottom: 3px solid #28a745; }}
+        .header h1 {{ font-size: 28px; font-weight: 300; letter-spacing: 1px; color: #ffffff; }}
+        .header p {{ color: #28a745; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; margin-top: 8px; }}
+        .content {{ padding: 50px 40px; }}
+        .greeting {{ font-size: 24px; color: #1a1a1a; margin-bottom: 32px; font-weight: 400; }}
+        .booking-code {{ background-color: #f8f9fa; padding: 30px; text-align: center; margin: 32px 0; border: 1px solid #dee2e6; }}
+        .booking-code-label {{ font-size: 11px; color: #6c757d; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }}
+        .booking-code-value {{ font-size: 28px; font-weight: 300; letter-spacing: 3px; color: #1a1a1a; }}
+        .info-section {{ margin: 32px 0; }}
+        .info-row {{ display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid #e9ecef; }}
+        .info-label {{ color: #6c757d; font-size: 14px; font-weight: 400; }}
+        .info-value {{ color: #1a1a1a; font-size: 15px; font-weight: 500; }}
+        .rooms-section {{ margin: 32px 0; }}
+        .rooms-title {{ font-size: 16px; color: #1a1a1a; margin-bottom: 20px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }}
+        .footer {{ background-color: #1a1a1a; padding: 40px; text-align: center; color: #adb5bd; font-size: 13px; }}
+        .footer p {{ margin: 8px 0; }}
+        .footer strong {{ color: #ffffff; }}
     </style>
 </head>
 <body>
     <div class=""container"">
         <div class=""header"">
-            <h1>✅ Reserva Confirmada</h1>
-            <p style=""margin-top: 10px; opacity: 0.95;"">{hotelName}</p>
+            <h1>Reserva Confirmada</h1>
+            <p>{hotelName}</p>
         </div>
         
         <div class=""content"">
-            <div class=""success-icon"">🎉</div>
+            <div class=""greeting"">Olá, {guestName}</div>
             
-            <div class=""greeting"">Olá, {guestName}!</div>
-            
-            <div class=""success-box"">
-                <h2>Sua Reserva Foi Confirmada!</h2>
-                <p>Estamos ansiosos para recebê-lo</p>
+            <div style=""color: #495057; margin-bottom: 32px; font-size: 15px; line-height: 1.8;"">
+                Sua reserva foi confirmada. Aguardamos sua chegada.
             </div>
             
-            <div style=""background-color: #edf2f7; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;"">
-                <div style=""font-size: 12px; color: #718096; margin-bottom: 5px;"">Código da Reserva</div>
-                <div style=""font-size: 24px; font-weight: 700; color: #2d3748; letter-spacing: 1px;"">{bookingCode}</div>
+            <div class=""booking-code"">
+                <div class=""booking-code-label"">Código da Reserva</div>
+                <div class=""booking-code-value"">{bookingCode}</div>
             </div>
             
             <div class=""info-section"">
                 <div class=""info-row"">
-                    <div class=""info-label"">📅 Check-in</div>
+                    <div class=""info-label"">Check-in</div>
                     <div class=""info-value"">{checkInDate:dd/MM/yyyy} às 14:00</div>
                 </div>
                 <div class=""info-row"">
-                    <div class=""info-label"">📅 Check-out</div>
+                    <div class=""info-label"">Check-out</div>
                     <div class=""info-value"">{checkOutDate:dd/MM/yyyy} às 12:00</div>
                 </div>
                 <div class=""info-row"">
-                    <div class=""info-label"">🌙 Noites</div>
+                    <div class=""info-label"">Noites</div>
                     <div class=""info-value"">{nights} {(nights == 1 ? "noite" : "noites")}</div>
                 </div>
             </div>
             
-            <div style=""margin: 25px 0;"">
-                <div style=""font-size: 20px; color: #2d3748; margin-bottom: 20px; font-weight: 600;"">🏨 Quartos Confirmados</div>
+            <div class=""rooms-section"">
+                <div class=""rooms-title"">Quartos Confirmados</div>
                 {roomsHtml}
             </div>
             
-            <div style=""background-color: #f0fff4; border-left: 4px solid #48bb78; padding: 20px; border-radius: 8px; margin: 25px 0;"">
-                <div style=""font-size: 16px; font-weight: 600; color: #22543d; margin-bottom: 10px;"">💡 Próximos Passos</div>
-                <div style=""color: #2f855a; font-size: 14px; line-height: 1.8;"">
-                    • Você receberá um lembrete 3 dias antes do check-in<br>
-                    • Prepare-se para uma experiência incrível!<br>
-                    • Em caso de dúvidas, entre em contato conosco
-                </div>
-            </div>
-            
             {(string.IsNullOrWhiteSpace(hotelAddress) ? "" : $@"
-            <div style=""background-color: #ebf8ff; border-left: 4px solid #4299e1; padding: 20px; border-radius: 8px; margin: 25px 0;"">
-                <div style=""font-size: 16px; font-weight: 600; color: #2c5282; margin-bottom: 10px;"">📍 Como Chegar</div>
-                <div style=""color: #2b6cb0; line-height: 1.8; font-size: 14px;"">
+            <div style=""background-color: #f8f9fa; padding: 24px; margin: 32px 0; border-left: 3px solid #1a1a1a;"">
+                <div style=""font-size: 14px; font-weight: 500; color: #1a1a1a; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;"">Localização</div>
+                <div style=""color: #495057; line-height: 1.8; font-size: 14px;"">
                     {hotelName}<br>
                     {hotelAddress}
-                    {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<br>📞 {hotelPhone}")}
+                    {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<br>{hotelPhone}")}
                 </div>
             </div>")}
         </div>
         
         <div class=""footer"">
             <p><strong>{hotelName}</strong></p>
-            <p style=""margin-top: 10px;"">Estamos ansiosos para recebê-lo!</p>
-            <p style=""margin-top: 5px; font-size: 12px;"">© {DateTime.Now.Year} {hotelName}. Todos os direitos reservados.</p>
+            {(string.IsNullOrWhiteSpace(hotelAddress) ? "" : $@"<p>{hotelAddress}</p>")}
+            {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<p>{hotelPhone}</p>")}
+            <p style=""margin-top: 20px; font-size: 11px; color: #6c757d;"">© {DateTime.Now.Year} {hotelName}. Todos os direitos reservados.</p>
         </div>
     </div>
 </body>
@@ -1254,74 +1187,73 @@ public class EmailTemplateService : IEmailTemplateService
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f7fa; line-height: 1.6; }}
         .container {{ max-width: 600px; margin: 0 auto; background-color: #ffffff; }}
-        .header {{ background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); padding: 40px 30px; text-align: center; color: white; }}
-        .header h1 {{ font-size: 28px; margin-bottom: 10px; font-weight: 600; }}
-        .content {{ padding: 40px 30px; }}
-        .reminder-icon {{ text-align: center; font-size: 64px; margin-bottom: 20px; }}
-        .greeting {{ font-size: 24px; color: #2d3748; margin-bottom: 20px; font-weight: 600; text-align: center; }}
-        .checkout-box {{ background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); padding: 25px; border-radius: 12px; text-align: center; color: white; margin: 25px 0; }}
-        .checkout-label {{ font-size: 14px; opacity: 0.9; margin-bottom: 8px; }}
-        .checkout-value {{ font-size: 36px; font-weight: 700; }}
-        .info-section {{ margin: 25px 0; }}
-        .info-box {{ background-color: #fff5f5; border-left: 4px solid #f56565; padding: 20px; border-radius: 8px; margin: 25px 0; }}
-        .info-title {{ font-size: 16px; font-weight: 600; color: #c53030; margin-bottom: 10px; }}
-        .info-content {{ color: #742a2a; font-size: 14px; line-height: 1.8; }}
-        .footer {{ background-color: #2d3748; padding: 30px; text-align: center; color: #a0aec0; font-size: 14px; }}
+        .header {{ background-color: #1a1a1a; padding: 50px 40px; text-align: center; border-bottom: 3px solid #ffc107; }}
+        .header h1 {{ font-size: 28px; font-weight: 300; letter-spacing: 1px; color: #ffffff; }}
+        .header p {{ color: #ffc107; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; margin-top: 8px; }}
+        .content {{ padding: 50px 40px; }}
+        .greeting {{ font-size: 24px; color: #1a1a1a; margin-bottom: 32px; font-weight: 400; }}
+        .checkout-box {{ background-color: #1a1a1a; padding: 30px; text-align: center; margin: 32px 0; color: #ffffff; }}
+        .checkout-label {{ font-size: 11px; color: #ffc107; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }}
+        .checkout-value {{ font-size: 32px; font-weight: 300; letter-spacing: 1px; }}
+        .info-section {{ margin: 32px 0; }}
+        .info-box {{ background-color: #f8f9fa; border-left: 3px solid #1a1a1a; padding: 20px; margin: 32px 0; }}
+        .info-title {{ font-size: 14px; font-weight: 500; color: #1a1a1a; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .info-content {{ color: #495057; font-size: 14px; line-height: 1.8; }}
+        .footer {{ background-color: #1a1a1a; padding: 40px; text-align: center; color: #adb5bd; font-size: 13px; }}
+        .footer p {{ margin: 8px 0; }}
+        .footer strong {{ color: #ffffff; }}
     </style>
 </head>
 <body>
     <div class=""container"">
         <div class=""header"">
-            <h1>⏰ Lembrete de Check-out</h1>
-            <p style=""margin-top: 10px; opacity: 0.95;"">Sua estadia está chegando ao fim</p>
+            <h1>Lembrete de Check-out</h1>
+            <p>{hotelName}</p>
         </div>
         
         <div class=""content"">
-            <div class=""reminder-icon"">🕐</div>
+            <div class=""greeting"">Olá, {guestName}</div>
             
-            <div class=""greeting"">Olá, {guestName}!</div>
-            
-            <div style=""text-align: center; color: #4a5568; margin-bottom: 30px; font-size: 16px;"">
-                Faltam apenas <strong>1 dia</strong> para o check-out no <strong>{hotelName}</strong>!
+            <div style=""color: #495057; margin-bottom: 32px; font-size: 15px; line-height: 1.8;"">
+                Este é um lembrete de que seu check-out está programado para amanhã.
             </div>
             
             <div class=""checkout-box"">
-                <div class=""checkout-label"">Data e Hora do Check-out</div>
+                <div class=""checkout-label"">Data de Check-out</div>
                 <div class=""checkout-value"">{checkOutDate:dd/MM/yyyy}</div>
-                <div style=""font-size: 18px; margin-top: 10px; opacity: 0.95;"">até às 12:00</div>
+                <div style=""font-size: 13px; color: #adb5bd; margin-top: 8px;"">Até às 12:00</div>
             </div>
             
             <div class=""info-box"">
-                <div class=""info-title"">⚠️ Informações Importantes</div>
+                <div class=""info-title"">Horário de Saída</div>
                 <div class=""info-content"">
-                    • Check-out: até às <strong>12:00</strong><br>
-                    • Verifique se não deixou pertences pessoais no quarto<br>
-                    • Se precisar de mais tempo, entre em contato conosco<br>
-                    • A chave do quarto deve ser devolvida na recepção
+                    Por favor, realize o check-out até às 12:00 para evitar cobranças adicionais.
+                </div>
+            </div>
+            
+            <div class=""info-box"">
+                <div class=""info-title"">Informações</div>
+                <div class=""info-content"">
+                    Verifique se não deixou nenhum pertence no quarto. Devolva as chaves na recepção. Em caso de dúvidas sobre o pagamento, entre em contato conosco.
                 </div>
             </div>
             
             {(string.IsNullOrWhiteSpace(hotelAddress) ? "" : $@"
-            <div style=""background-color: #f0fff4; border-left: 4px solid #48bb78; padding: 20px; border-radius: 8px; margin: 25px 0;"">
-                <div style=""font-size: 16px; font-weight: 600; color: #22543d; margin-bottom: 10px;"">📍 Localização</div>
-                <div style=""color: #2f855a; line-height: 1.8; font-size: 14px;"">
+            <div style=""background-color: #f8f9fa; padding: 24px; margin: 32px 0; border-left: 3px solid #1a1a1a;"">
+                <div style=""font-size: 14px; font-weight: 500; color: #1a1a1a; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;"">Localização</div>
+                <div style=""color: #495057; line-height: 1.8; font-size: 14px;"">
                     {hotelName}<br>
                     {hotelAddress}
-                    {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<br>📞 {hotelPhone}")}
+                    {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<br>{hotelPhone}")}
                 </div>
             </div>")}
-            
-            <div style=""text-align: center; margin: 30px 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white;"">
-                <div style=""font-size: 18px; font-weight: 600; margin-bottom: 10px;"">Foi um prazer recebê-lo!</div>
-                <div style=""font-size: 14px; opacity: 0.9;"">Esperamos vê-lo novamente em breve</div>
-            </div>
         </div>
         
         <div class=""footer"">
             <p><strong>{hotelName}</strong></p>
-            {(string.IsNullOrWhiteSpace(hotelAddress) ? "" : $@"<p style=""margin-top: 10px;"">{hotelAddress}</p>")}
-            {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<p>📞 {hotelPhone}</p>")}
-            <p style=""margin-top: 15px; font-size: 12px;"">© {DateTime.Now.Year} {hotelName}. Todos os direitos reservados.</p>
+            {(string.IsNullOrWhiteSpace(hotelAddress) ? "" : $@"<p>{hotelAddress}</p>")}
+            {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<p>{hotelPhone}</p>")}
+            <p style=""margin-top: 20px; font-size: 11px; color: #6c757d;"">© {DateTime.Now.Year} {hotelName}. Todos os direitos reservados.</p>
         </div>
     </div>
 </body>

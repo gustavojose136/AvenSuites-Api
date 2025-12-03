@@ -2,6 +2,8 @@ using AvenSuitesApi.Application.DTOs.Booking;
 using AvenSuitesApi.Application.Services.Interfaces;
 using AvenSuitesApi.Domain.Entities;
 using AvenSuitesApi.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
+using BookingRoomInfo = AvenSuitesApi.Application.Services.Interfaces.BookingRoomInfo;
 
 namespace AvenSuitesApi.Application.Services.Implementations.Booking;
 
@@ -13,6 +15,9 @@ public class BookingService : IBookingService
     private readonly IGuestRepository _guestRepository;
     private readonly IRoomRepository _roomRepository;
     private readonly IRatePlanRepository _ratePlanRepository;
+    private readonly IEmailService _emailService;
+    private readonly IEmailTemplateService _emailTemplateService;
+    private readonly ILogger<BookingService> _logger;
 
     public BookingService(
         IBookingRepository bookingRepository,
@@ -20,7 +25,10 @@ public class BookingService : IBookingService
         IHotelRepository hotelRepository,
         IGuestRepository guestRepository,
         IRoomRepository roomRepository,
-        IRatePlanRepository ratePlanRepository)
+        IRatePlanRepository ratePlanRepository,
+        IEmailService emailService,
+        IEmailTemplateService emailTemplateService,
+        ILogger<BookingService> logger)
     {
         _bookingRepository = bookingRepository;
         _bookingRoomRepository = bookingRoomRepository;
@@ -28,6 +36,9 @@ public class BookingService : IBookingService
         _guestRepository = guestRepository;
         _roomRepository = roomRepository;
         _ratePlanRepository = ratePlanRepository;
+        _emailService = emailService;
+        _emailTemplateService = emailTemplateService;
+        _logger = logger;
     }
 
     public async Task<BookingResponse?> CreateBookingAsync(BookingCreateRequest request)
@@ -97,7 +108,11 @@ public class BookingService : IBookingService
             createdBooking.BookingRooms.Add(bookingRoom);
         }
         
-        return MapToResponse(createdBooking);
+        var response = MapToResponse(createdBooking);
+        
+        _ = Task.Run(async () => await SendBookingConfirmationEmailAsync(createdBooking));
+        
+        return response;
     }
 
     public async Task<BookingResponse?> GetBookingByIdAsync(Guid id)
@@ -185,7 +200,7 @@ public class BookingService : IBookingService
 
     public async Task<bool> CancelBookingAsync(Guid id, string? reason = null)
     {
-        var booking = await _bookingRepository.GetByIdAsync(id);
+        var booking = await _bookingRepository.GetByIdWithDetailsAsync(id);
         if (booking == null)
             return false;
 
@@ -196,12 +211,15 @@ public class BookingService : IBookingService
 
         await RegisterStatusChangeAsync(booking.Id, oldStatus, "CANCELLED", reason);
         await _bookingRepository.UpdateAsync(booking);
+        
+        _ = Task.Run(async () => await SendBookingCancellationEmailAsync(booking, reason));
+        
         return true;
     }
 
     public async Task<bool> ConfirmBookingAsync(Guid id)
     {
-        var booking = await _bookingRepository.GetByIdAsync(id);
+        var booking = await _bookingRepository.GetByIdWithDetailsAsync(id);
         if (booking == null)
             return false;
 
@@ -211,6 +229,9 @@ public class BookingService : IBookingService
 
         await RegisterStatusChangeAsync(booking.Id, oldStatus, "CONFIRMED", "Reserva confirmada via API");
         await _bookingRepository.UpdateAsync(booking);
+        
+        _ = Task.Run(async () => await SendBookingConfirmedEmailAsync(booking));
+        
         return true;
     }
 
@@ -330,6 +351,174 @@ public class BookingService : IBookingService
     {
         var days = (request.CheckOutDate - request.CheckInDate).Days;
         return request.BookingRooms.Sum(br => br.PriceTotal) * days;
+    }
+    
+    private async Task SendBookingConfirmationEmailAsync(Domain.Entities.Booking booking)
+    {
+        try
+        {
+            var bookingWithDetails = await _bookingRepository.GetByIdWithDetailsAsync(booking.Id);
+            if (bookingWithDetails == null)
+                return;
+
+            var hotel = await _hotelRepository.GetByIdAsync(bookingWithDetails.HotelId);
+            if (hotel == null)
+                return;
+
+            var guest = await _guestRepository.GetByIdWithPiiAsync(bookingWithDetails.MainGuestId);
+            if (guest?.GuestPii == null || string.IsNullOrWhiteSpace(guest.GuestPii.Email))
+                return;
+
+            var nights = (bookingWithDetails.CheckOutDate - bookingWithDetails.CheckInDate).Days;
+            var rooms = bookingWithDetails.BookingRooms
+                .Where(br => br.Room != null && br.RoomType != null)
+                .GroupBy(br => br.RoomId)
+                .Select(g => g.First())
+                .Select(br => new BookingRoomInfo
+                {
+                    RoomNumber = br.Room!.RoomNumber,
+                    RoomTypeName = br.RoomType!.Name ?? "",
+                    PriceTotal = br.PriceTotal
+                })
+                .ToList();
+
+            if (rooms.Count == 0)
+                return;
+
+            var hotelAddress = !string.IsNullOrWhiteSpace(hotel.AddressLine1)
+                ? $"{hotel.AddressLine1}{(string.IsNullOrWhiteSpace(hotel.AddressLine2) ? "" : $", {hotel.AddressLine2}")}, {hotel.City} - {hotel.State}"
+                : null;
+
+            var emailBody = _emailTemplateService.GenerateBookingConfirmationEmail(
+                guestName: guest.GuestPii.FullName ?? "Hóspede",
+                hotelName: hotel.Name,
+                bookingCode: bookingWithDetails.Code,
+                checkInDate: bookingWithDetails.CheckInDate,
+                checkOutDate: bookingWithDetails.CheckOutDate,
+                nights: nights,
+                totalAmount: bookingWithDetails.TotalAmount,
+                currency: bookingWithDetails.Currency,
+                rooms: rooms,
+                hotelAddress: hotelAddress,
+                hotelPhone: hotel.PhoneE164);
+
+            await _emailService.SendEmailAsync(
+                to: guest.GuestPii.Email,
+                subject: $"Confirmação de Reserva - {hotel.Name}",
+                body: emailBody,
+                isHtml: true,
+                cc: null,
+                bcc: null);
+
+            _logger.LogInformation("E-mail de confirmação de reserva enviado para {Email}, Booking: {BookingCode}",
+                guest.GuestPii.Email, bookingWithDetails.Code);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao enviar e-mail de confirmação de reserva para Booking: {BookingId}",
+                booking.Id);
+        }
+    }
+    
+    private async Task SendBookingConfirmedEmailAsync(Domain.Entities.Booking booking)
+    {
+        try
+        {
+            var hotel = await _hotelRepository.GetByIdAsync(booking.HotelId);
+            if (hotel == null)
+                return;
+
+            var guest = await _guestRepository.GetByIdWithPiiAsync(booking.MainGuestId);
+            if (guest?.GuestPii == null || string.IsNullOrWhiteSpace(guest.GuestPii.Email))
+                return;
+
+            var nights = (booking.CheckOutDate - booking.CheckInDate).Days;
+            var rooms = booking.BookingRooms
+                .Where(br => br.Room != null && br.RoomType != null)
+                .GroupBy(br => br.RoomId)
+                .Select(g => g.First())
+                .Select(br => new BookingRoomInfo
+                {
+                    RoomNumber = br.Room!.RoomNumber,
+                    RoomTypeName = br.RoomType!.Name ?? "",
+                    PriceTotal = br.PriceTotal
+                })
+                .ToList();
+
+            if (rooms.Count == 0)
+                return;
+
+            var hotelAddress = !string.IsNullOrWhiteSpace(hotel.AddressLine1)
+                ? $"{hotel.AddressLine1}{(string.IsNullOrWhiteSpace(hotel.AddressLine2) ? "" : $", {hotel.AddressLine2}")}, {hotel.City} - {hotel.State}"
+                : null;
+
+            var emailBody = _emailTemplateService.GenerateBookingConfirmedEmail(
+                guestName: guest.GuestPii.FullName ?? "Hóspede",
+                hotelName: hotel.Name,
+                bookingCode: booking.Code,
+                checkInDate: booking.CheckInDate,
+                checkOutDate: booking.CheckOutDate,
+                nights: nights,
+                rooms: rooms,
+                hotelAddress: hotelAddress,
+                hotelPhone: hotel.PhoneE164);
+
+            await _emailService.SendEmailAsync(
+                to: guest.GuestPii.Email,
+                subject: $"Reserva Confirmada - {hotel.Name}",
+                body: emailBody,
+                isHtml: true,
+                cc: null,
+                bcc: null);
+
+            _logger.LogInformation("E-mail de reserva confirmada enviado para {Email}, Booking: {BookingCode}",
+                guest.GuestPii.Email, booking.Code);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao enviar e-mail de reserva confirmada para Booking: {BookingId}",
+                booking.Id);
+        }
+    }
+    
+    private async Task SendBookingCancellationEmailAsync(Domain.Entities.Booking booking, string? reason = null)
+    {
+        try
+        {
+            var hotel = await _hotelRepository.GetByIdAsync(booking.HotelId);
+            if (hotel == null)
+                return;
+
+            var guest = await _guestRepository.GetByIdWithPiiAsync(booking.MainGuestId);
+            if (guest?.GuestPii == null || string.IsNullOrWhiteSpace(guest.GuestPii.Email))
+                return;
+
+            var emailBody = _emailTemplateService.GenerateBookingCancellationEmail(
+                guestName: guest.GuestPii.FullName ?? "Hóspede",
+                hotelName: hotel.Name,
+                bookingCode: booking.Code,
+                checkInDate: booking.CheckInDate,
+                checkOutDate: booking.CheckOutDate,
+                totalAmount: booking.TotalAmount,
+                currency: booking.Currency,
+                reason: reason);
+
+            await _emailService.SendEmailAsync(
+                to: guest.GuestPii.Email,
+                subject: $"Cancelamento de Reserva - {hotel.Name}",
+                body: emailBody,
+                isHtml: true,
+                cc: null,
+                bcc: null);
+
+            _logger.LogInformation("E-mail de cancelamento de reserva enviado para {Email}, Booking: {BookingCode}",
+                guest.GuestPii.Email, booking.Code);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao enviar e-mail de cancelamento de reserva para Booking: {BookingId}",
+                booking.Id);
+        }
     }
 }
 
