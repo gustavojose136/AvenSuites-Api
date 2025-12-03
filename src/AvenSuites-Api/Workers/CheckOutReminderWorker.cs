@@ -7,9 +7,6 @@ using Microsoft.Extensions.Logging;
 
 namespace AvenSuitesApi.Workers;
 
-/// <summary>
-/// Worker que envia lembretes de check-out 1 dia antes
-/// </summary>
 public class CheckOutReminderWorker : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
@@ -34,11 +31,9 @@ public class CheckOutReminderWorker : BackgroundService
                 var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
                 var emailTemplateService = scope.ServiceProvider.GetRequiredService<IEmailTemplateService>();
 
-                // Data de check-out 1 dia a partir de hoje
                 var targetCheckOutDate = DateTime.UtcNow.Date.AddDays(1);
                 var targetCheckOutDateEnd = targetCheckOutDate.AddDays(1);
 
-                // Buscar reservas com check-out em 1 dia e status CHECKED_IN
                 var bookingsToRemind = await context.Bookings
                     .Include(b => b.MainGuest)
                         .ThenInclude(g => g.GuestPii)
@@ -110,7 +105,6 @@ public class CheckOutReminderWorker : BackgroundService
                     }
                 }
 
-                // Executar uma vez por dia às 10:00 AM
                 var now = DateTime.UtcNow;
                 var nextRun = now.Date.AddDays(1).AddHours(10);
                 if (nextRun <= now)
@@ -123,11 +117,13 @@ public class CheckOutReminderWorker : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erro no CheckOutReminderWorker");
-                // Em caso de erro, aguardar 1 hora antes de tentar novamente
                 await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
             }
         }
     }
 }
+
+
+
 
 

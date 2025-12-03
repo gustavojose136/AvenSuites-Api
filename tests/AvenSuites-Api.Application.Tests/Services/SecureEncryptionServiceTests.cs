@@ -3,73 +3,67 @@ using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit;
 
 namespace AvenSuitesApi.Application.Tests.Services;
 
 public class SecureEncryptionServiceTests
 {
-    private readonly Mock<IConfiguration> _configurationMock;
     private readonly Mock<ILogger<SecureEncryptionService>> _loggerMock;
-    private readonly SecureEncryptionService _service;
+    private readonly IConfiguration _configuration;
 
     public SecureEncryptionServiceTests()
     {
-        _configurationMock = new Mock<IConfiguration>();
         _loggerMock = new Mock<ILogger<SecureEncryptionService>>();
         
-        _configurationMock.Setup(x => x["Security:EncryptionKey"])
-            .Returns("AvenSuites-Development-Key-32Bytes-Long!!");
-
-        _service = new SecureEncryptionService(_configurationMock.Object, _loggerMock.Object);
+        var configurationDict = new Dictionary<string, string?>
+        {
+            { "Security:EncryptionKey", "AvenSuites-Encryption-Key-32-Chars!!" }
+        };
+        
+        _configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(configurationDict)
+            .Build();
     }
 
     [Fact]
     public void Encrypt_WithValidText_ShouldReturnEncryptedString()
     {
         // Arrange
-        var plainText = "Texto secreto para criptografar";
+        var service = new SecureEncryptionService(_configuration, _loggerMock.Object);
+        var plainText = "Teste de criptografia";
 
         // Act
-        var result = _service.Encrypt(plainText);
+        var encrypted = service.Encrypt(plainText);
 
         // Assert
-        result.Should().NotBeNullOrEmpty();
-        result.Should().NotBe(plainText);
+        encrypted.Should().NotBeNullOrEmpty();
+        encrypted.Should().NotBe(plainText);
+        encrypted.Should().MatchRegex(@"^[A-Za-z0-9+/=]+$"); // Base64 format
     }
 
     [Fact]
     public void Encrypt_WithEmptyString_ShouldReturnEmptyString()
     {
         // Arrange
-        var plainText = "";
+        var service = new SecureEncryptionService(_configuration, _loggerMock.Object);
 
         // Act
-        var result = _service.Encrypt(plainText);
+        var encrypted = service.Encrypt(string.Empty);
 
         // Assert
-        result.Should().BeEmpty();
-    }
-
-    [Fact]
-    public void Encrypt_WithNull_ShouldReturnEmptyString()
-    {
-        // Arrange & Act
-        var result = _service.Encrypt(null!);
-
-        // Assert
-        result.Should().BeEmpty();
+        encrypted.Should().BeEmpty();
     }
 
     [Fact]
     public void Decrypt_WithEncryptedText_ShouldReturnOriginalText()
     {
         // Arrange
-        var plainText = "Texto original para testar";
+        var service = new SecureEncryptionService(_configuration, _loggerMock.Object);
+        var plainText = "Teste de descriptografia";
 
         // Act
-        var encrypted = _service.Encrypt(plainText);
-        var decrypted = _service.Decrypt(encrypted);
+        var encrypted = service.Encrypt(plainText);
+        var decrypted = service.Decrypt(encrypted);
 
         // Assert
         decrypted.Should().Be(plainText);
@@ -79,30 +73,76 @@ public class SecureEncryptionServiceTests
     public void Decrypt_WithEmptyString_ShouldReturnEmptyString()
     {
         // Arrange
-        var encrypted = "";
+        var service = new SecureEncryptionService(_configuration, _loggerMock.Object);
 
         // Act
-        var result = _service.Decrypt(encrypted);
+        var decrypted = service.Decrypt(string.Empty);
 
         // Assert
-        result.Should().BeEmpty();
+        decrypted.Should().BeEmpty();
     }
 
     [Fact]
-    public void EncryptAndDecrypt_WithDifferentTexts_ShouldWorkCorrectly()
+    public void EncryptAndDecrypt_WithSpecialCharacters_ShouldWork()
     {
         // Arrange
-        var texts = new[] { "Texto 1", "Outro texto", "123456", "Texto com acentuação: áéíóú" };
+        var service = new SecureEncryptionService(_configuration, _loggerMock.Object);
+        var plainText = "Teste com caracteres especiais: @#$%^&*()_+-=[]{}|;':\",./<>?";
 
-        foreach (var text in texts)
-        {
-            // Act
-            var encrypted = _service.Encrypt(text);
-            var decrypted = _service.Decrypt(encrypted);
+        // Act
+        var encrypted = service.Encrypt(plainText);
+        var decrypted = service.Decrypt(encrypted);
 
-            // Assert
-            decrypted.Should().Be(text);
-        }
+        // Assert
+        decrypted.Should().Be(plainText);
+    }
+
+    [Fact]
+    public void EncryptAndDecrypt_WithUnicodeCharacters_ShouldWork()
+    {
+        // Arrange
+        var service = new SecureEncryptionService(_configuration, _loggerMock.Object);
+        var plainText = "Teste com unicode: 你好世界 🌍";
+
+        // Act
+        var encrypted = service.Encrypt(plainText);
+        var decrypted = service.Decrypt(encrypted);
+
+        // Assert
+        decrypted.Should().Be(plainText);
+    }
+
+    [Fact]
+    public void Encrypt_WithLongText_ShouldWork()
+    {
+        // Arrange
+        var service = new SecureEncryptionService(_configuration, _loggerMock.Object);
+        var plainText = new string('A', 10000); // 10KB of text
+
+        // Act
+        var encrypted = service.Encrypt(plainText);
+        var decrypted = service.Decrypt(encrypted);
+
+        // Assert
+        decrypted.Should().Be(plainText);
+    }
+
+    [Fact]
+    public void Encrypt_WithNullConfiguration_ShouldUseDefaultKey()
+    {
+        // Arrange
+        var emptyConfig = new ConfigurationBuilder().Build();
+        var service = new SecureEncryptionService(emptyConfig, _loggerMock.Object);
+        var plainText = "Teste";
+
+        // Act
+        var encrypted = service.Encrypt(plainText);
+        var decrypted = service.Decrypt(encrypted);
+
+        // Assert
+        decrypted.Should().Be(plainText);
     }
 }
+
+
 

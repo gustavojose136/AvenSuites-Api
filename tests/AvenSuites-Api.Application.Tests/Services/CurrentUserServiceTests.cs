@@ -3,19 +3,18 @@ using AvenSuitesApi.Application.Services.Implementations;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Moq;
-using Xunit;
 
 namespace AvenSuitesApi.Application.Tests.Services;
 
 public class CurrentUserServiceTests
 {
     private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
-    private readonly CurrentUserService _service;
+    private readonly CurrentUserService _currentUserService;
 
     public CurrentUserServiceTests()
     {
         _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-        _service = new CurrentUserService(_httpContextAccessorMock.Object);
+        _currentUserService = new CurrentUserService(_httpContextAccessorMock.Object);
     }
 
     [Fact]
@@ -34,7 +33,7 @@ public class CurrentUserServiceTests
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
-        var result = _service.GetUserId();
+        var result = _currentUserService.GetUserId();
 
         // Assert
         result.Should().Be(userId);
@@ -47,11 +46,9 @@ public class CurrentUserServiceTests
         var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal() };
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
 
-        // Act
-        var act = () => _service.GetUserId();
-
-        // Assert
-        act.Should().Throw<UnauthorizedAccessException>()
+        // Act & Assert
+        _currentUserService.Invoking(x => x.GetUserId())
+            .Should().Throw<UnauthorizedAccessException>()
             .WithMessage("Usuário não autenticado");
     }
 
@@ -71,10 +68,23 @@ public class CurrentUserServiceTests
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
-        var result = _service.GetUserEmail();
+        var result = _currentUserService.GetUserEmail();
 
         // Assert
         result.Should().Be(email);
+    }
+
+    [Fact]
+    public void GetUserEmail_WithoutClaim_ShouldThrowUnauthorizedAccessException()
+    {
+        // Arrange
+        var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal() };
+        _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
+
+        // Act & Assert
+        _currentUserService.Invoking(x => x.GetUserEmail())
+            .Should().Throw<UnauthorizedAccessException>()
+            .WithMessage("Email do usuário não encontrado");
     }
 
     [Fact]
@@ -93,10 +103,24 @@ public class CurrentUserServiceTests
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
-        var result = _service.GetUserHotelId();
+        var result = _currentUserService.GetUserHotelId();
 
         // Assert
         result.Should().Be(hotelId);
+    }
+
+    [Fact]
+    public void GetUserHotelId_WithoutClaim_ShouldReturnNull()
+    {
+        // Arrange
+        var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal() };
+        _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
+
+        // Act
+        var result = _currentUserService.GetUserHotelId();
+
+        // Assert
+        result.Should().BeNull();
     }
 
     [Fact]
@@ -115,7 +139,7 @@ public class CurrentUserServiceTests
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
-        var result = _service.GetUserRoles();
+        var result = _currentUserService.GetUserRoles();
 
         // Assert
         result.Should().HaveCount(2);
@@ -138,14 +162,28 @@ public class CurrentUserServiceTests
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
-        var result = _service.IsAdmin();
+        var result = _currentUserService.IsAdmin();
 
         // Assert
         result.Should().BeTrue();
     }
 
     [Fact]
-    public void HasAccessToHotel_WithAdminRole_ShouldReturnTrue()
+    public void IsAdmin_WithoutAdminRole_ShouldReturnFalse()
+    {
+        // Arrange
+        var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal() };
+        _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
+
+        // Act
+        var result = _currentUserService.IsAdmin();
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void HasAccessToHotel_AsAdmin_ShouldReturnTrue()
     {
         // Arrange
         var hotelId = Guid.NewGuid();
@@ -160,14 +198,14 @@ public class CurrentUserServiceTests
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
-        var result = _service.HasAccessToHotel(hotelId);
+        var result = _currentUserService.HasAccessToHotel(hotelId);
 
         // Assert
         result.Should().BeTrue();
     }
 
     [Fact]
-    public void HasAccessToHotel_WithHotelAdminAndMatchingHotel_ShouldReturnTrue()
+    public void HasAccessToHotel_AsHotelAdmin_WithMatchingHotel_ShouldReturnTrue()
     {
         // Arrange
         var hotelId = Guid.NewGuid();
@@ -183,22 +221,22 @@ public class CurrentUserServiceTests
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
-        var result = _service.HasAccessToHotel(hotelId);
+        var result = _currentUserService.HasAccessToHotel(hotelId);
 
         // Assert
         result.Should().BeTrue();
     }
 
     [Fact]
-    public void HasAccessToHotel_WithHotelAdminAndDifferentHotel_ShouldReturnFalse()
+    public void HasAccessToHotel_AsHotelAdmin_WithDifferentHotel_ShouldReturnFalse()
     {
         // Arrange
-        var userHotelId = Guid.NewGuid();
-        var requestedHotelId = Guid.NewGuid();
+        var hotelId = Guid.NewGuid();
+        var otherHotelId = Guid.NewGuid();
         var claims = new List<Claim>
         {
             new(ClaimTypes.Role, "Hotel-Admin"),
-            new("HotelId", userHotelId.ToString())
+            new("HotelId", otherHotelId.ToString())
         };
         var identity = new ClaimsIdentity(claims, "Test");
         var principal = new ClaimsPrincipal(identity);
@@ -207,10 +245,12 @@ public class CurrentUserServiceTests
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
-        var result = _service.HasAccessToHotel(requestedHotelId);
+        var result = _currentUserService.HasAccessToHotel(hotelId);
 
         // Assert
         result.Should().BeFalse();
     }
 }
+
+
 

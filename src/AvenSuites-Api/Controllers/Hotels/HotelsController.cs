@@ -31,14 +31,12 @@ public class HotelsController : ControllerBase
     {
         if (_currentUser.IsAdmin() || _currentUser.IsGuest())
         {
-            // Admin vê todos os hotéis
             var hotels = await _hotelService.GetAllHotelsAsync();
             return Ok(hotels);
         }
         
         if (_currentUser.IsHotelAdmin())
         {
-            // Hotel-Admin vê apenas o próprio hotel
             var hotelId = _currentUser.GetUserHotelId();
             if (!hotelId.HasValue)
                 return Forbid();
@@ -68,7 +66,6 @@ public class HotelsController : ControllerBase
     [ProducesResponseType(403)]
     public async Task<ActionResult<HotelResponse>> GetById(Guid id)
     {
-        // Verificar se tem acesso ao hotel
         if (!_currentUser.HasAccessToHotel(id))
             return Forbid();
 
@@ -132,7 +129,6 @@ public class HotelsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        // Verificar se tem acesso ao hotel
         if (!_currentUser.HasAccessToHotel(id))
             return Forbid();
 

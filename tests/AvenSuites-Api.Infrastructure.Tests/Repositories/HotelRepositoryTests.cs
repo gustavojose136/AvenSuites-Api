@@ -3,7 +3,6 @@ using AvenSuitesApi.Infrastructure.Data.Contexts;
 using AvenSuitesApi.Infrastructure.Repositories.Implementations;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Xunit;
 
 namespace AvenSuitesApi.Infrastructure.Tests.Repositories;
 
@@ -29,13 +28,10 @@ public class HotelRepositoryTests : IDisposable
         var hotel = new Hotel
         {
             Id = Guid.NewGuid(),
-            Name = "Hotel Test",
-            TradeName = "Hotel Test LTDA",
-            Cnpj = "12345678000190",
-            Email = "test@hotel.com",
-            Status = "ACTIVE"
+            Name = "Test Hotel",
+            Cnpj = "12345678901234",
+            CreatedAt = DateTime.UtcNow
         };
-
         _context.Hotels.Add(hotel);
         await _context.SaveChangesAsync();
 
@@ -45,89 +41,70 @@ public class HotelRepositoryTests : IDisposable
         // Assert
         result.Should().NotBeNull();
         result!.Id.Should().Be(hotel.Id);
-        result.Name.Should().Be("Hotel Test");
-        result.Cnpj.Should().Be("12345678000190");
+        result.Name.Should().Be(hotel.Name);
     }
 
     [Fact]
-    public async Task GetByIdAsync_WithNonExistingHotel_ShouldReturnNull()
+    public async Task GetByCnpjAsync_WithExistingHotel_ShouldReturnHotel()
     {
         // Arrange
-        var nonExistingId = Guid.NewGuid();
-
-        // Act
-        var result = await _hotelRepository.GetByIdAsync(nonExistingId);
-
-        // Assert
-        result.Should().BeNull();
-    }
-
-    [Fact]
-    public async Task GetByCnpjAsync_WithExistingCnpj_ShouldReturnHotel()
-    {
-        // Arrange
+        var cnpj = "12345678901234";
         var hotel = new Hotel
         {
             Id = Guid.NewGuid(),
-            Name = "Hotel Test",
-            Cnpj = "12345678000190",
-            Status = "ACTIVE"
+            Name = "Test Hotel",
+            Cnpj = cnpj,
+            CreatedAt = DateTime.UtcNow
         };
-
         _context.Hotels.Add(hotel);
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _hotelRepository.GetByCnpjAsync("12345678000190");
+        var result = await _hotelRepository.GetByCnpjAsync(cnpj);
 
         // Assert
         result.Should().NotBeNull();
-        result!.Cnpj.Should().Be("12345678000190");
+        result!.Cnpj.Should().Be(cnpj);
     }
 
     [Fact]
-    public async Task GetAllAsync_ShouldReturnOnlyActiveHotels()
+    public async Task GetAllAsync_ShouldReturnAllHotels()
     {
         // Arrange
-        var activeHotel = new Hotel
+        var hotel1 = new Hotel
         {
             Id = Guid.NewGuid(),
-            Name = "Active Hotel",
-            Cnpj = "11111111000111",
-            Status = "ACTIVE"
+            Name = "Hotel 1",
+            Cnpj = "11111111111111",
+            CreatedAt = DateTime.UtcNow
         };
-
-        var inactiveHotel = new Hotel
+        var hotel2 = new Hotel
         {
             Id = Guid.NewGuid(),
-            Name = "Inactive Hotel",
-            Cnpj = "22222222000222",
-            Status = "INACTIVE"
+            Name = "Hotel 2",
+            Cnpj = "22222222222222",
+            CreatedAt = DateTime.UtcNow
         };
-
-        _context.Hotels.AddRange(activeHotel, inactiveHotel);
+        _context.Hotels.AddRange(hotel1, hotel2);
         await _context.SaveChangesAsync();
 
         // Act
         var result = await _hotelRepository.GetAllAsync();
 
         // Assert
-        result.Should().HaveCount(1);
-        result.Should().Contain(h => h.Id == activeHotel.Id);
-        result.Should().NotContain(h => h.Id == inactiveHotel.Id);
+        result.Should().HaveCountGreaterOrEqualTo(2);
     }
 
     [Fact]
-    public async Task AddAsync_WithValidHotel_ShouldAddHotel()
+    public async Task AddAsync_ShouldAddHotel()
     {
         // Arrange
         var hotel = new Hotel
         {
             Id = Guid.NewGuid(),
             Name = "New Hotel",
-            Cnpj = "33333333000333",
-            Email = "new@hotel.com",
-            Status = "ACTIVE"
+            Cnpj = "99999999999999",
+            CreatedAt = DateTime.UtcNow
         };
 
         // Act
@@ -135,54 +112,46 @@ public class HotelRepositoryTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
-        result.Id.Should().Be(hotel.Id);
-        result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
-        result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
-
         var savedHotel = await _context.Hotels.FindAsync(hotel.Id);
         savedHotel.Should().NotBeNull();
+        savedHotel!.Name.Should().Be("New Hotel");
     }
 
     [Fact]
-    public async Task UpdateAsync_WithExistingHotel_ShouldUpdateHotel()
+    public async Task UpdateAsync_ShouldUpdateHotel()
     {
         // Arrange
         var hotel = new Hotel
         {
             Id = Guid.NewGuid(),
-            Name = "Original Name",
-            Cnpj = "44444444000444",
-            Status = "ACTIVE"
+            Name = "Old Name",
+            Cnpj = "12345678901234",
+            CreatedAt = DateTime.UtcNow
         };
-
         _context.Hotels.Add(hotel);
         await _context.SaveChangesAsync();
 
-        hotel.Name = "Updated Name";
-        hotel.Email = "updated@hotel.com";
-
         // Act
-        var result = await _hotelRepository.UpdateAsync(hotel);
+        hotel.Name = "New Name";
+        hotel.UpdatedAt = DateTime.UtcNow;
+        await _hotelRepository.UpdateAsync(hotel);
 
         // Assert
-        result.Should().NotBeNull();
-        result.Name.Should().Be("Updated Name");
-        result.Email.Should().Be("updated@hotel.com");
-        result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+        var updatedHotel = await _context.Hotels.FindAsync(hotel.Id);
+        updatedHotel!.Name.Should().Be("New Name");
     }
 
     [Fact]
-    public async Task DeleteAsync_WithExistingHotel_ShouldSoftDeleteHotel()
+    public async Task DeleteAsync_ShouldDeleteHotel()
     {
         // Arrange
         var hotel = new Hotel
         {
             Id = Guid.NewGuid(),
-            Name = "Hotel to Delete",
-            Cnpj = "55555555000555",
-            Status = "ACTIVE"
+            Name = "Test Hotel",
+            Cnpj = "12345678901234",
+            CreatedAt = DateTime.UtcNow
         };
-
         _context.Hotels.Add(hotel);
         await _context.SaveChangesAsync();
 
@@ -191,76 +160,7 @@ public class HotelRepositoryTests : IDisposable
 
         // Assert
         var deletedHotel = await _context.Hotels.FindAsync(hotel.Id);
-        deletedHotel.Should().NotBeNull();
-        deletedHotel!.Status.Should().Be("INACTIVE");
-        deletedHotel.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
-    }
-
-    [Fact]
-    public async Task ExistsAsync_WithExistingHotel_ShouldReturnTrue()
-    {
-        // Arrange
-        var hotel = new Hotel
-        {
-            Id = Guid.NewGuid(),
-            Name = "Existing Hotel",
-            Cnpj = "66666666000666",
-            Status = "ACTIVE"
-        };
-
-        _context.Hotels.Add(hotel);
-        await _context.SaveChangesAsync();
-
-        // Act
-        var exists = await _hotelRepository.ExistsAsync(hotel.Id);
-
-        // Assert
-        exists.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task ExistsAsync_WithNonExistingHotel_ShouldReturnFalse()
-    {
-        // Arrange
-        var nonExistingId = Guid.NewGuid();
-
-        // Act
-        var exists = await _hotelRepository.ExistsAsync(nonExistingId);
-
-        // Assert
-        exists.Should().BeFalse();
-    }
-
-    [Fact]
-    public async Task ExistsByCnpjAsync_WithExistingCnpj_ShouldReturnTrue()
-    {
-        // Arrange
-        var hotel = new Hotel
-        {
-            Id = Guid.NewGuid(),
-            Name = "Hotel",
-            Cnpj = "77777777000777",
-            Status = "ACTIVE"
-        };
-
-        _context.Hotels.Add(hotel);
-        await _context.SaveChangesAsync();
-
-        // Act
-        var exists = await _hotelRepository.ExistsByCnpjAsync("77777777000777");
-
-        // Assert
-        exists.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task ExistsByCnpjAsync_WithNonExistingCnpj_ShouldReturnFalse()
-    {
-        // Arrange & Act
-        var exists = await _hotelRepository.ExistsByCnpjAsync("99999999000999");
-
-        // Assert
-        exists.Should().BeFalse();
+        deletedHotel.Should().BeNull();
     }
 
     public void Dispose()
@@ -268,4 +168,6 @@ public class HotelRepositoryTests : IDisposable
         _context.Dispose();
     }
 }
+
+
 

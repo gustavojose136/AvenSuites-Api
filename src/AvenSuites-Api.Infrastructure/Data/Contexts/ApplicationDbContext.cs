@@ -73,6 +73,7 @@ public class ApplicationDbContext : DbContext
         // User configuration
         modelBuilder.Entity<User>(entity =>
         {
+            entity.ToTable("users");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
@@ -94,6 +95,7 @@ public class ApplicationDbContext : DbContext
         // Role configuration
         modelBuilder.Entity<Role>(entity =>
         {
+            entity.ToTable("roles");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Description).HasMaxLength(200);
@@ -106,6 +108,7 @@ public class ApplicationDbContext : DbContext
         // UserRole configuration
         modelBuilder.Entity<UserRole>(entity =>
         {
+            entity.ToTable("userroles");
             entity.HasKey(e => new { e.UserId, e.RoleId });
             entity.Property(e => e.AssignedAt).IsRequired();
 
@@ -123,6 +126,7 @@ public class ApplicationDbContext : DbContext
         // HotelKey configuration
         modelBuilder.Entity<HotelKey>(entity =>
         {
+            entity.ToTable("hotelkeys");
             entity.HasKey(e => new { e.HotelId, e.KeyVersion });
             
             entity.HasOne(e => e.Hotel)
@@ -134,6 +138,7 @@ public class ApplicationDbContext : DbContext
         // ApiIdempotencyKey configuration
         modelBuilder.Entity<ApiIdempotencyKey>(entity =>
         {
+            entity.ToTable("apiidempotencykeys");
             entity.HasKey(e => e.IdempotencyKey);
             entity.HasIndex(e => e.ExpiresAt);
         });
@@ -141,6 +146,7 @@ public class ApplicationDbContext : DbContext
         // BookingGuest configuration (chave composta)
         modelBuilder.Entity<BookingGuest>(entity =>
         {
+            entity.ToTable("bookingguests");
             entity.HasKey(e => new { e.BookingId, e.GuestId });
             
             entity.HasOne(e => e.Booking)
@@ -157,6 +163,7 @@ public class ApplicationDbContext : DbContext
         // BookingRoomNight configuration (chave composta única)
         modelBuilder.Entity<BookingRoomNight>(entity =>
         {
+            entity.ToTable("bookingroomnights");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => new { e.RoomId, e.StayDate }).IsUnique();
         });
@@ -164,6 +171,7 @@ public class ApplicationDbContext : DbContext
         // Guest configuration
         modelBuilder.Entity<Guest>(entity =>
         {
+            entity.ToTable("guests");
             entity.HasKey(e => e.Id);
             
             entity.HasOne(e => e.Hotel)
@@ -181,6 +189,7 @@ public class ApplicationDbContext : DbContext
         // GuestPii configuration
         modelBuilder.Entity<GuestPii>(entity =>
         {
+            entity.ToTable("guestpii");
             entity.HasKey(e => e.GuestId);
             entity.HasOne(e => e.Guest)
                 .WithOne(e => e.GuestPii)
@@ -195,12 +204,14 @@ public class ApplicationDbContext : DbContext
         // NotificationTemplate configuration
         modelBuilder.Entity<NotificationTemplate>(entity =>
         {
+            entity.ToTable("notificationtemplates");
             entity.HasKey(e => e.TemplateKey);
         });
 
         // NotificationLog configuration
         modelBuilder.Entity<NotificationLog>(entity =>
         {
+            entity.ToTable("notificationlogs");
             entity.HasKey(e => e.Id);
             
             entity.HasOne(e => e.Template)
@@ -212,6 +223,7 @@ public class ApplicationDbContext : DbContext
         // IpmCredentials configuration
         modelBuilder.Entity<IpmCredentials>(entity =>
         {
+            entity.ToTable("ipmcredentials");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.HotelId).IsUnique();
             
@@ -224,6 +236,7 @@ public class ApplicationDbContext : DbContext
         // RoomTypeOccupancyPrice configuration
         modelBuilder.Entity<RoomTypeOccupancyPrice>(entity =>
         {
+            entity.ToTable("roomtypeoccupancyprices");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Occupancy).IsRequired();
             entity.Property(e => e.PricePerNight).IsRequired().HasPrecision(18, 2);
@@ -236,6 +249,27 @@ public class ApplicationDbContext : DbContext
             // Índice único para garantir que não haja preços duplicados para a mesma ocupação
             entity.HasIndex(e => new { e.RoomTypeId, e.Occupancy }).IsUnique();
         });
+
+        // Configurações das demais entidades
+        modelBuilder.Entity<Hotel>().ToTable("hotels");
+        modelBuilder.Entity<Room>().ToTable("rooms");
+        modelBuilder.Entity<RoomType>().ToTable("roomtypes");
+        modelBuilder.Entity<Amenity>().ToTable("amenities");
+        modelBuilder.Entity<MaintenanceBlock>().ToTable("maintenanceblocks");
+        modelBuilder.Entity<RatePlan>().ToTable("rateplans");
+        modelBuilder.Entity<RatePlanPrice>().ToTable("rateplanprices");
+        modelBuilder.Entity<Booking>().ToTable("bookings");
+        modelBuilder.Entity<BookingRoom>().ToTable("bookingrooms");
+        modelBuilder.Entity<BookingPayment>().ToTable("bookingpayments");
+        modelBuilder.Entity<BookingStatusHistory>().ToTable("bookingstatushistories");
+        modelBuilder.Entity<Invoice>().ToTable("invoices");
+        modelBuilder.Entity<InvoiceItem>().ToTable("invoiceitems");
+        modelBuilder.Entity<ErpIntegrationLog>().ToTable("erpintegrationlogs");
+        modelBuilder.Entity<ChatSession>().ToTable("chatsessions");
+        modelBuilder.Entity<ChatMessage>().ToTable("chatmessages");
+        modelBuilder.Entity<IntegrationEventOutbox>().ToTable("integrationeventoutbox");
+        modelBuilder.Entity<IntegrationEventInbox>().ToTable("integrationeventinbox");
+        modelBuilder.Entity<AuditLog>().ToTable("auditlogs");
 
         // Seed data
         SeedData(modelBuilder);

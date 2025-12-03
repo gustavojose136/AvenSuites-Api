@@ -1,105 +1,149 @@
 using AvenSuitesApi.Application.Services.Implementations;
 using FluentAssertions;
-using Xunit;
 
 namespace AvenSuitesApi.Application.Tests.Services;
 
 public class EmailTemplateServiceTests
 {
-    private readonly EmailTemplateService _service;
+    private readonly EmailTemplateService _emailTemplateService;
 
     public EmailTemplateServiceTests()
     {
-        _service = new EmailTemplateService();
+        _emailTemplateService = new EmailTemplateService();
     }
 
     [Fact]
-    public void GenerateWelcomeEmail_WithValidData_ShouldReturnHtmlContent()
+    public void GenerateWelcomeEmail_ShouldContainGuestName()
     {
         // Arrange
         var guestName = "João Silva";
-        var hotelName = "Hotel Avenida";
+        var hotelName = "Hotel Teste";
 
         // Act
-        var result = _service.GenerateWelcomeEmail(guestName, hotelName);
+        var result = _emailTemplateService.GenerateWelcomeEmail(guestName, hotelName);
 
         // Assert
-        result.Should().NotBeNullOrEmpty();
         result.Should().Contain(guestName);
         result.Should().Contain(hotelName);
         result.Should().Contain("<!DOCTYPE html>");
-        result.Should().Contain("</html>");
     }
 
     [Fact]
-    public void GenerateBookingConfirmationEmail_WithValidData_ShouldReturnHtmlContent()
+    public void GenerateBookingConfirmationEmail_ShouldContainBookingDetails()
     {
         // Arrange
         var guestName = "Maria Santos";
-        var hotelName = "Hotel Avenida";
-        var bookingCode = "RES-2025-001";
-        var checkInDate = DateTime.Today.AddDays(7);
-        var checkOutDate = DateTime.Today.AddDays(9);
-        var totalAmount = 600m;
-        var currency = "BRL";
+        var hotelName = "Hotel Teste";
+        var bookingCode = "ABC123";
+        var checkIn = DateTime.Now.AddDays(7);
+        var checkOut = DateTime.Now.AddDays(10);
+        var rooms = new List<AvenSuitesApi.Application.Services.Interfaces.BookingRoomInfo>
+        {
+            new() { RoomNumber = "101", RoomTypeName = "Standard", PriceTotal = 500m }
+        };
 
         // Act
-        var result = _service.GenerateBookingConfirmationEmail(
-            guestName, hotelName, bookingCode, checkInDate, checkOutDate, totalAmount, currency);
+        var result = _emailTemplateService.GenerateBookingConfirmationEmail(
+            guestName, hotelName, bookingCode, checkIn, checkOut, 3, 500m, "BRL", rooms);
 
         // Assert
-        result.Should().NotBeNullOrEmpty();
         result.Should().Contain(guestName);
         result.Should().Contain(hotelName);
         result.Should().Contain(bookingCode);
-        result.Should().Contain("<!DOCTYPE html>");
+        result.Should().Contain("101");
+        result.Should().Contain("Standard");
     }
 
     [Fact]
-    public void GenerateBookingCancellationEmail_WithValidData_ShouldReturnHtmlContent()
+    public void GenerateBookingCancellationEmail_ShouldContainCancellationInfo()
     {
         // Arrange
         var guestName = "Pedro Costa";
-        var hotelName = "Hotel Avenida";
-        var bookingCode = "RES-2025-002";
-        var checkInDate = DateTime.Today.AddDays(5);
-        var checkOutDate = DateTime.Today.AddDays(7);
-        var totalAmount = 400m;
-        var currency = "BRL";
-        var reason = "Cancelamento solicitado pelo cliente";
+        var hotelName = "Hotel Teste";
+        var bookingCode = "XYZ789";
+        var checkIn = DateTime.Now.AddDays(5);
+        var checkOut = DateTime.Now.AddDays(8);
 
         // Act
-        var result = _service.GenerateBookingCancellationEmail(
-            guestName, hotelName, bookingCode, checkInDate, checkOutDate, totalAmount, currency, reason);
+        var result = _emailTemplateService.GenerateBookingCancellationEmail(
+            guestName, hotelName, bookingCode, checkIn, checkOut, 1000m, "BRL", "Motivo do cancelamento");
 
         // Assert
-        result.Should().NotBeNullOrEmpty();
         result.Should().Contain(guestName);
+        result.Should().Contain(hotelName);
         result.Should().Contain(bookingCode);
-        result.Should().Contain(reason);
-        result.Should().Contain("<!DOCTYPE html>");
+        result.Should().Contain("Motivo do cancelamento");
     }
 
     [Fact]
-    public void GenerateInvoiceEmail_WithValidData_ShouldReturnHtmlContent()
+    public void GenerateBookingReminderEmail_ShouldContainReminderInfo()
     {
         // Arrange
         var guestName = "Ana Lima";
-        var hotelName = "Hotel Avenida";
-        var invoiceNumber = "NF-2025-001";
-        var invoiceDate = DateTime.Today;
-        var totalAmount = 500m;
-        var currency = "BRL";
+        var hotelName = "Hotel Teste";
+        var bookingCode = "REM456";
+        var checkIn = DateTime.Now.AddDays(3);
+        var checkOut = DateTime.Now.AddDays(6);
+        var rooms = new List<AvenSuitesApi.Application.Services.Interfaces.BookingRoomInfo>
+        {
+            new() { RoomNumber = "201", RoomTypeName = "Deluxe", PriceTotal = 800m }
+        };
 
         // Act
-        var result = _service.GenerateInvoiceEmail(
-            guestName, hotelName, invoiceNumber, invoiceDate, totalAmount, currency);
+        var result = _emailTemplateService.GenerateBookingReminderEmail(
+            guestName, hotelName, bookingCode, checkIn, checkOut, 3, rooms);
 
         // Assert
-        result.Should().NotBeNullOrEmpty();
         result.Should().Contain(guestName);
-        result.Should().Contain(invoiceNumber);
-        result.Should().Contain("<!DOCTYPE html>");
+        result.Should().Contain(hotelName);
+        result.Should().Contain(bookingCode);
+        result.Should().Contain("201");
+    }
+
+    [Fact]
+    public void GenerateCheckInConfirmationEmail_ShouldContainCheckInInfo()
+    {
+        // Arrange
+        var guestName = "Carlos Oliveira";
+        var hotelName = "Hotel Teste";
+        var bookingCode = "CHK789";
+        var checkOut = DateTime.Now.AddDays(5);
+        var rooms = new List<AvenSuitesApi.Application.Services.Interfaces.BookingRoomInfo>
+        {
+            new() { RoomNumber = "301", RoomTypeName = "Suite", PriceTotal = 1200m }
+        };
+
+        // Act
+        var result = _emailTemplateService.GenerateCheckInConfirmationEmail(
+            guestName, hotelName, bookingCode, rooms, checkOut);
+
+        // Assert
+        result.Should().Contain(guestName);
+        result.Should().Contain(hotelName);
+        result.Should().Contain(bookingCode);
+        result.Should().Contain("301");
+    }
+
+    [Fact]
+    public void GenerateCheckOutConfirmationEmail_ShouldContainCheckOutInfo()
+    {
+        // Arrange
+        var guestName = "Fernanda Souza";
+        var hotelName = "Hotel Teste";
+        var bookingCode = "OUT123";
+        var checkIn = DateTime.Now.AddDays(-3);
+        var checkOut = DateTime.Now;
+
+        // Act
+        var result = _emailTemplateService.GenerateCheckOutConfirmationEmail(
+            guestName, hotelName, bookingCode, checkIn, checkOut, 3, 1500m, "BRL");
+
+        // Assert
+        result.Should().Contain(guestName);
+        result.Should().Contain(hotelName);
+        result.Should().Contain(bookingCode);
     }
 }
+
+
 

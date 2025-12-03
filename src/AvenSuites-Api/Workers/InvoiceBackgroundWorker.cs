@@ -28,7 +28,6 @@ public class InvoiceBackgroundWorker : BackgroundService
                 using var scope = _serviceProvider.CreateScope();
                 var invoiceRepository = scope.ServiceProvider.GetRequiredService<IInvoiceRepository>();
 
-                // Buscar invoices com status PENDING
                 var pendingInvoices = await invoiceRepository.GetByStatusAsync("PENDING");
 
                 foreach (var invoice in pendingInvoices)
@@ -38,14 +37,9 @@ public class InvoiceBackgroundWorker : BackgroundService
                         _logger.LogInformation("Processando invoice {InvoiceId} para booking {BookingId}",
                             invoice.Id, invoice.BookingId);
 
-                        // Atualizar status para PROCESSING
                         invoice.Status = "PROCESSING";
                         invoice.UpdatedAt = DateTime.UtcNow;
                         await invoiceRepository.UpdateAsync(invoice);
-
-                        // Aqui você pode adicionar a lógica para chamar IpmNfseService
-                        // var ipmService = scope.ServiceProvider.GetRequiredService<IIpmNfseService>();
-                        // await ipmService.GenerateInvoiceAsync(...);
 
                         _logger.LogInformation("Invoice {InvoiceId} processado com sucesso", invoice.Id);
                     }
@@ -59,7 +53,6 @@ public class InvoiceBackgroundWorker : BackgroundService
                     }
                 }
 
-                // Aguardar 5 minutos antes de executar novamente
                 await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
             }
             catch (Exception ex)
