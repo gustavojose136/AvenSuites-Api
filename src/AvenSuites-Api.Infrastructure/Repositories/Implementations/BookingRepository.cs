@@ -32,6 +32,7 @@ public class BookingRepository : IBookingRepository
             .Include(b => b.StatusHistory)
             .Include(b => b.Invoice)
             .Include(b => b.Hotel)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(b => b.Id == id);
     }
 

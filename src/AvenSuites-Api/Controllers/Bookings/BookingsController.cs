@@ -21,10 +21,6 @@ public class BookingsController : ControllerBase
         _currentUser = currentUser;
     }
 
-    /// <summary>
-    /// Lista todas as reservas com filtros opcionais.
-    /// Admin vê todas, Hotel-Admin vê apenas do próprio hotel.
-    /// </summary>
     [HttpGet]
     [Authorize(Roles = "Admin,Hotel-Admin")]
     [ProducesResponseType(typeof(IEnumerable<BookingResponse>), 200)]
@@ -36,7 +32,6 @@ public class BookingsController : ControllerBase
     {
         if (_currentUser.IsAdmin())
         {
-            // Admin pode filtrar por qualquer hotel
             if (hotelId.HasValue)
             {
                 var bookings = await _bookingService.GetBookingsByHotelAsync(hotelId.Value, startDate, endDate);
@@ -58,7 +53,6 @@ public class BookingsController : ControllerBase
             if (!userHotelId.HasValue)
                 return Forbid();
             
-            // Se especificou outro hotel, negar acesso
             if (hotelId.HasValue && hotelId.Value != userHotelId.Value)
                 return Forbid();
             
@@ -69,9 +63,6 @@ public class BookingsController : ControllerBase
         return Forbid();
     }
 
-    /// <summary>
-    /// Busca reserva por ID. Requer acesso ao hotel da reserva.
-    /// </summary>
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin,Hotel-Admin")]
     [ProducesResponseType(typeof(BookingResponse), 200)]
@@ -83,16 +74,12 @@ public class BookingsController : ControllerBase
         if (booking == null)
             return NotFound(new { message = "Reserva não encontrada" });
 
-        // Verificar se tem acesso ao hotel
         if (!_currentUser.HasAccessToHotel(booking.HotelId))
             return Forbid();
 
         return Ok(booking);
     }
 
-    /// <summary>
-    /// Busca reserva por código. Requer acesso ao hotel.
-    /// </summary>
     [HttpGet("code/{code}")]
     [Authorize(Roles = "Admin,Hotel-Admin")]
     [ProducesResponseType(typeof(BookingResponse), 200)]
@@ -111,9 +98,6 @@ public class BookingsController : ControllerBase
         return Ok(booking);
     }
 
-    /// <summary>
-    /// Lista reservas por hotel. Requer acesso ao hotel.
-    /// </summary>
     [HttpGet("hotel/{hotelId}")]
     [Authorize(Roles = "Admin,Hotel-Admin")]
     [ProducesResponseType(typeof(IEnumerable<BookingResponse>), 200)]
@@ -131,9 +115,6 @@ public class BookingsController : ControllerBase
         return Ok(bookings);
     }
 
-    /// <summary>
-    /// Lista reservas por hóspede.
-    /// </summary>
     [HttpGet("guest/{guestId}")]
     [Authorize(Roles = "Admin,Hotel-Admin")]
     [ProducesResponseType(typeof(IEnumerable<BookingResponse>), 200)]
@@ -141,7 +122,6 @@ public class BookingsController : ControllerBase
     {
         var bookings = await _bookingService.GetBookingsByGuestAsync(guestId);
         
-        // Filtrar apenas reservas do hotel do usuário se for Hotel-Admin
         if (_currentUser.IsHotelAdmin())
         {
             var userHotelId = _currentUser.GetUserHotelId();
@@ -154,9 +134,6 @@ public class BookingsController : ControllerBase
         return Ok(bookings);
     }
 
-    /// <summary>
-    /// Cria uma nova reserva. Requer acesso ao hotel.
-    /// </summary>
     [HttpPost]
     [Authorize()]
     [ProducesResponseType(typeof(BookingResponse), 201)]
@@ -178,9 +155,6 @@ public class BookingsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = booking.Id }, booking);
     }
 
-    /// <summary>
-    /// Atualiza uma reserva. Requer acesso ao hotel.
-    /// </summary>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin,Hotel-Admin")]
     [ProducesResponseType(typeof(BookingResponse), 200)]
@@ -206,9 +180,6 @@ public class BookingsController : ControllerBase
         return Ok(booking);
     }
 
-    /// <summary>
-    /// Cancela uma reserva. Requer acesso ao hotel.
-    /// </summary>
     [HttpPost("{id}/cancel")]
     [Authorize(Roles = "Admin,Hotel-Admin")]
     [ProducesResponseType(200)]
@@ -231,9 +202,6 @@ public class BookingsController : ControllerBase
         return Ok(new { message = "Reserva cancelada com sucesso." });
     }
 
-    /// <summary>
-    /// Confirma uma reserva. Requer acesso ao hotel.
-    /// </summary>
     [HttpPost("{id}/confirm")]
     [Authorize(Roles = "Admin,Hotel-Admin")]
     [ProducesResponseType(200)]
@@ -256,9 +224,6 @@ public class BookingsController : ControllerBase
         return Ok(new { message = "Reserva confirmada com sucesso." });
     }
 
-    /// <summary>
-    /// Realiza check-in de uma reserva. Requer acesso ao hotel.
-    /// </summary>
     [HttpPost("{id}/check-in")]
     [Authorize(Roles = "Admin,Hotel-Admin")]
     [ProducesResponseType(200)]
@@ -270,7 +235,6 @@ public class BookingsController : ControllerBase
         if (booking == null)
             return NotFound(new { message = "Reserva não encontrada" });
 
-        // Verificar se tem acesso ao hotel
         if (!_currentUser.HasAccessToHotel(booking.HotelId))
             return Forbid();
 
@@ -282,9 +246,6 @@ public class BookingsController : ControllerBase
         return Ok(new { message = "Check-in realizado com sucesso", booking = updatedBooking });
     }
 
-    /// <summary>
-    /// Realiza check-out de uma reserva. Requer acesso ao hotel.
-    /// </summary>
     [HttpPost("{id}/check-out")]
     [Authorize(Roles = "Admin,Hotel-Admin")]
     [ProducesResponseType(200)]
@@ -296,7 +257,6 @@ public class BookingsController : ControllerBase
         if (booking == null)
             return NotFound(new { message = "Reserva não encontrada" });
 
-        // Verificar se tem acesso ao hotel
         if (!_currentUser.HasAccessToHotel(booking.HotelId))
             return Forbid();
 

@@ -34,26 +34,21 @@ public class RoomsController : ControllerBase
     {
         if (_currentUser.IsAdmin() || _currentUser.IsGuest())
         {
-            // Admin pode filtrar por qualquer hotel ou ver todos
             if (hotelId.HasValue)
             {
                 var rooms = await _roomService.GetRoomsByHotelAsync(hotelId.Value, status);
                 return Ok(rooms);
             }
             
-            // Buscar todos os quartos de todos os hotéis
-            // Por enquanto, retornar erro pedindo para especificar hotelId
             return BadRequest(new { message = "Admin deve especificar hotelId para listar quartos" });
         }
         
         if (_currentUser.IsHotelAdmin())
         {
-            // Hotel-Admin vê apenas quartos do próprio hotel
             var userHotelId = _currentUser.GetUserHotelId();
             if (!userHotelId.HasValue)
                 return Forbid();
             
-            // Se especificou outro hotel, negar acesso
             if (hotelId.HasValue && hotelId.Value != userHotelId.Value)
                 return Forbid();
             

@@ -39,14 +39,12 @@ public class InvoiceService : IInvoiceService
         if (booking == null || booking.Status != "CONFIRMED")
             return null;
 
-        // Verificar se já existe invoice
         var existingInvoice = await _invoiceRepository.GetByBookingIdAsync(bookingId);
         if (existingInvoice != null)
             return MapToResponse(existingInvoice);
 
-        // Calcular totais
         var totalServices = booking.BookingRooms.Sum(br => br.PriceTotal);
-        var totalTaxes = 0m; // Implementar cálculo de impostos
+        var totalTaxes = 0m;
 
         var invoice = new Domain.Entities.Invoice
         {
@@ -61,7 +59,7 @@ public class InvoiceService : IInvoiceService
             Items = booking.BookingRooms.Select(br => new InvoiceItem
             {
                 Id = Guid.NewGuid(),
-                InvoiceId = Guid.Empty, // Será definido após salvar
+                InvoiceId = Guid.Empty,
                 Description = $"Diária - Quarto {br.Room.RoomNumber}",
                 Quantity = (booking.CheckOutDate - booking.CheckInDate).Days,
                 UnitPrice = br.PriceTotal / (booking.CheckOutDate - booking.CheckInDate).Days,

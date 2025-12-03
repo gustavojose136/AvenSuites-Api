@@ -137,12 +137,10 @@ public class GuestRegistrationService : IGuestRegistrationService
             user.UserRoles = new List<UserRole> { userRole };
             userRole.Role = guestRole;
 
-            // Gerar token JWT
             var token = _jwtService.GenerateToken(user);
 
             _logger.LogInformation("Hóspede registrado com sucesso: {Email}", request.Email);
 
-            // Enviar e-mail de boas-vindas
             try
             {
                 var emailBody = _emailTemplateService.GenerateWelcomeEmail(request.Name, hotel.Name);
@@ -158,7 +156,6 @@ public class GuestRegistrationService : IGuestRegistrationService
             }
             catch (Exception emailEx)
             {
-                // Não falhar o registro se o e-mail falhar
                 _logger.LogWarning(emailEx, "Erro ao enviar e-mail de boas-vindas para {Email}", request.Email);
             }
 

@@ -9,9 +9,6 @@ using BookingRoomInfo = AvenSuitesApi.Application.Services.Interfaces.BookingRoo
 
 namespace AvenSuitesApi.Workers;
 
-/// <summary>
-/// Worker que envia lembretes de reserva 3 dias antes do check-in
-/// </summary>
 public class BookingReminderWorker : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
@@ -36,11 +33,9 @@ public class BookingReminderWorker : BackgroundService
                 var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
                 var emailTemplateService = scope.ServiceProvider.GetRequiredService<IEmailTemplateService>();
 
-                // Data de check-in 3 dias a partir de hoje
                 var targetCheckInDate = DateTime.UtcNow.Date.AddDays(3);
                 var targetCheckInDateEnd = targetCheckInDate.AddDays(1);
 
-                // Buscar reservas com check-in em 3 dias e status CONFIRMED ou PENDING
                 var bookingsToRemind = await context.Bookings
                     .Include(b => b.MainGuest)
                         .ThenInclude(g => g.GuestPii)
@@ -49,6 +44,7 @@ public class BookingReminderWorker : BackgroundService
                         .ThenInclude(br => br.Room)
                     .Include(b => b.BookingRooms)
                         .ThenInclude(br => br.RoomType)
+                    .AsSplitQuery()
                     .Where(b => b.CheckInDate.Date >= targetCheckInDate
                         && b.CheckInDate.Date < targetCheckInDateEnd
                         && (b.Status == "CONFIRMED" || b.Status == "PENDING")
@@ -78,6 +74,8 @@ public class BookingReminderWorker : BackgroundService
                         var nights = (booking.CheckOutDate - booking.CheckInDate).Days;
                         var rooms = booking.BookingRooms
                             .Where(br => br.Room != null && br.RoomType != null)
+                            .GroupBy(br => br.RoomId)
+                            .Select(g => g.First())
                             .Select(br => new BookingRoomInfo
                             {
                                 RoomNumber = br.Room!.RoomNumber,
@@ -133,7 +131,6 @@ public class BookingReminderWorker : BackgroundService
                     }
                 }
 
-                // Executar uma vez por dia às 9:00 AM
                 var now = DateTime.UtcNow;
                 var nextRun = now.Date.AddDays(1).AddHours(9);
                 if (nextRun <= now)
@@ -146,7 +143,6 @@ public class BookingReminderWorker : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erro no BookingReminderWorker");
-                // Em caso de erro, aguardar 1 hora antes de tentar novamente
                 await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
             }
         }

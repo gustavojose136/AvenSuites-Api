@@ -57,9 +57,6 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Credenciais válidas" });
     }
 
-    /// <summary>
-    /// Registro de novo hóspede (self-registration)
-    /// </summary>
     [HttpPost("register-guest")]
     public async Task<ActionResult<LoginResponse>> RegisterGuest([FromBody] GuestRegisterRequest request)
     {

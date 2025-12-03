@@ -32,25 +32,21 @@ public class GuestsController : ControllerBase
     {
         if (_currentUser.IsAdmin())
         {
-            // Admin pode filtrar por qualquer hotel ou ver todos
             if (hotelId.HasValue)
             {
                 var guests = await _guestService.GetGuestsByHotelAsync(hotelId.Value);
                 return Ok(guests);
             }
             
-            // Por enquanto, retornar erro pedindo para especificar hotelId
             return BadRequest(new { message = "Admin deve especificar hotelId para listar hóspedes" });
         }
         
         if (_currentUser.IsHotelAdmin())
         {
-            // Hotel-Admin vê apenas hóspedes do próprio hotel
             var userHotelId = _currentUser.GetUserHotelId();
             if (!userHotelId.HasValue)
                 return Forbid();
             
-            // Se especificou outro hotel, negar acesso
             if (hotelId.HasValue && hotelId.Value != userHotelId.Value)
                 return Forbid();
             
@@ -75,7 +71,6 @@ public class GuestsController : ControllerBase
         if (guest == null)
             return NotFound(new { message = "Hóspede não encontrado" });
 
-        // Verificar se tem acesso ao hotel do hóspede
         if (!_currentUser.HasAccessToHotel(guest.HotelId))
             return Forbid();
 

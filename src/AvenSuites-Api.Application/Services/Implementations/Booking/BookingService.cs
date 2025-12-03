@@ -32,34 +32,29 @@ public class BookingService : IBookingService
 
     public async Task<BookingResponse?> CreateBookingAsync(BookingCreateRequest request)
     {
-        // Validar hotel
         var hotel = await _hotelRepository.GetByIdAsync(request.HotelId);
         if (hotel == null)
             return null;
 
-        // Validar hóspede principal
         var mainGuest = await _guestRepository.GetByUserId(request.MainGuestId);
         if (mainGuest == null)
             return null;
 
-        // Validar e verificar disponibilidade dos quartos
         foreach (var bookingRoom in request.BookingRooms)
         {
             var room = await _roomRepository.GetByIdAsync(bookingRoom.RoomId);
             if (room == null || room.HotelId != request.HotelId)
-                return null; // Quarto não encontrado ou não pertence ao hotel
+                return null;
             
-            // Verificar disponibilidade
             var isAvailable = await IsRoomAvailableForDatesAsync(
                 bookingRoom.RoomId, 
                 request.CheckInDate, 
                 request.CheckOutDate);
             
             if (!isAvailable)
-                return null; // Quarto não disponível
+                return null;
         }
 
-        // Criar booking
         var booking = new AvenSuitesApi.Domain.Entities.Booking
         {
             Id = Guid.NewGuid(),
@@ -82,7 +77,6 @@ public class BookingService : IBookingService
 
         var createdBooking = await _bookingRepository.AddAsync(booking);
         
-        // Criar booking rooms
         foreach (var bookingRoomRequest in request.BookingRooms)
         {
             var bookingRoom = new AvenSuitesApi.Domain.Entities.BookingRoom
@@ -98,7 +92,6 @@ public class BookingService : IBookingService
                 UpdatedAt = DateTime.UtcNow
             };
             
-            // Adicionar usando o repositório (seguindo SOLID)
             await _bookingRoomRepository.AddAsync(bookingRoom);
 
             createdBooking.BookingRooms.Add(bookingRoom);
@@ -188,9 +181,6 @@ public class BookingService : IBookingService
             ChangedAt = DateTime.UtcNow,
             Notes = notes
         };
-        
-        // _context.BookingStatusHistories.Add(history);
-        // await _context.SaveChangesAsync();
     }
 
     public async Task<bool> CancelBookingAsync(Guid id, string? reason = null)
@@ -233,7 +223,6 @@ public class BookingService : IBookingService
         booking.Status = "CHECKED_IN";
         booking.UpdatedAt = DateTime.UtcNow;
 
-        // Atualizar status do quarto para ocupado
         foreach (var bookingRoom in booking.BookingRooms)
         {
             var room = await _roomRepository.GetByIdAsync(bookingRoom.RoomId);
@@ -258,7 +247,6 @@ public class BookingService : IBookingService
         booking.Status = "CHECKED_OUT";
         booking.UpdatedAt = DateTime.UtcNow;
 
-        // Liberar quartos
         foreach (var bookingRoom in booking.BookingRooms)
         {
             var room = await _roomRepository.GetByIdAsync(bookingRoom.RoomId);
@@ -328,13 +316,6 @@ public class BookingService : IBookingService
         if (room == null || room.Status != "ACTIVE")
             return false;
 
-        // Verificar conflitos com blocos de manutenção
-        // Note: Você precisará injetar ApplicationDbContext para isso
-        // var hasMaintenance = await _context.MaintenanceBlocks
-        //     .AnyAsync(mb => mb.RoomId == roomId && mb.Status == "ACTIVE" 
-        //         && mb.StartDate <= checkOut && mb.EndDate >= checkIn);
-        
-        // Verificar conflitos com reservas existentes
         var activeBookings = await _bookingRepository.GetByHotelIdAsync(room.HotelId);
         var hasConflict = activeBookings.Any(b => 
             b.Status != "CANCELLED"
@@ -347,7 +328,6 @@ public class BookingService : IBookingService
     
     private static decimal CalculateTotalFromRequest(BookingCreateRequest request)
     {
-        // Calcular total baseado nos quartos solicitados
         var days = (request.CheckOutDate - request.CheckInDate).Days;
         return request.BookingRooms.Sum(br => br.PriceTotal) * days;
     }
