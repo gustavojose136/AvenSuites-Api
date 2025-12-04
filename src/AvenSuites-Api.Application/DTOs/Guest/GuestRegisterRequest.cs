@@ -59,7 +59,6 @@ public class GuestRegisterRequest
 
     public bool MarketingConsent { get; set; } = false;
 
-    [Required(ErrorMessage = "HotelId é obrigatório")]
-    public Guid HotelId { get; set; }
+    public Guid? HotelId { get; set; }
 }
 

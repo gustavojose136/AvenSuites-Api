@@ -48,6 +48,12 @@ public class GuestRegistrationService : IGuestRegistrationService
     {
         try
         {
+            // Validar HotelId
+            if (!request.HotelId.HasValue || request.HotelId.Value == Guid.Empty)
+            {
+                throw new InvalidOperationException("HotelId é obrigatório");
+            }
+
             // Verificar se o email já existe
             if (await _userRepository.ExistsByEmailAsync(request.Email))
             {
@@ -55,7 +61,7 @@ public class GuestRegistrationService : IGuestRegistrationService
             }
 
             // Verificar se o hotel existe
-            var hotel = await _hotelRepository.GetByIdAsync(request.HotelId);
+            var hotel = await _hotelRepository.GetByIdAsync(request.HotelId.Value);
             if (hotel == null)
             {
                 throw new InvalidOperationException("Hotel não encontrado");
@@ -96,7 +102,7 @@ public class GuestRegistrationService : IGuestRegistrationService
             var guest = new AvenSuitesApi.Domain.Entities.Guest
             {
                 Id = Guid.NewGuid(),
-                HotelId = request.HotelId,
+                HotelId = request.HotelId.Value,
                 UserId = user.Id,
                 MarketingConsent = request.MarketingConsent,
                 CreatedAt = DateTime.UtcNow,

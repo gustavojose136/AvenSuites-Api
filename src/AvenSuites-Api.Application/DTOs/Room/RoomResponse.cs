@@ -12,6 +12,10 @@ public class RoomResponse
     public DateTime UpdatedAt { get; set; }
     
     public RoomTypeSummaryResponse? RoomType { get; set; }
+    
+    // Preços calculados (opcionais - apenas quando guests e datas são fornecidos)
+    public decimal? PricePerNight { get; set; }
+    public decimal? TotalPrice { get; set; }
 }
 
 public class RoomTypeSummaryResponse
