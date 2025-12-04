@@ -30,13 +30,40 @@ public class RoomsController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<RoomResponse>), 200)]
     public async Task<ActionResult<IEnumerable<RoomResponse>>> GetAll(
         [FromQuery] Guid? hotelId = null,
-        [FromQuery] string? status = null)
+        [FromQuery] string? status = null,
+        [FromQuery] DateTime? checkInDate = null,
+        [FromQuery] DateTime? checkOutDate = null,
+        [FromQuery] short? guests = null)
     {
+        // Validar que se uma data for fornecida, ambas devem ser fornecidas
+        if ((checkInDate.HasValue && !checkOutDate.HasValue) || (!checkInDate.HasValue && checkOutDate.HasValue))
+        {
+            return BadRequest(new { message = "Ambas as datas (checkInDate e checkOutDate) devem ser fornecidas juntas" });
+        }
+
+        // Validar que a data de check-out seja posterior à data de check-in
+        if (checkInDate.HasValue && checkOutDate.HasValue && checkOutDate.Value <= checkInDate.Value)
+        {
+            return BadRequest(new { message = "A data de check-out deve ser posterior à data de check-in" });
+        }
+
+        // Validar que guests seja positivo se fornecido
+        if (guests.HasValue && guests.Value <= 0)
+        {
+            return BadRequest(new { message = "O número de hóspedes (guests) deve ser maior que zero" });
+        }
+
+        // Se guests for fornecido, datas também devem ser fornecidas para calcular o preço
+        if (guests.HasValue && (!checkInDate.HasValue || !checkOutDate.HasValue))
+        {
+            return BadRequest(new { message = "Para calcular o preço por hóspedes, é necessário fornecer checkInDate e checkOutDate" });
+        }
+
         if (_currentUser.IsAdmin() || _currentUser.IsGuest())
         {
             if (hotelId.HasValue)
             {
-                var rooms = await _roomService.GetRoomsByHotelAsync(hotelId.Value, status);
+                var rooms = await _roomService.GetRoomsByHotelAsync(hotelId.Value, status, checkInDate, checkOutDate, guests);
                 return Ok(rooms);
             }
             
@@ -52,7 +79,7 @@ public class RoomsController : ControllerBase
             if (hotelId.HasValue && hotelId.Value != userHotelId.Value)
                 return Forbid();
             
-            var rooms = await _roomService.GetRoomsByHotelAsync(userHotelId.Value, status);
+            var rooms = await _roomService.GetRoomsByHotelAsync(userHotelId.Value, status, checkInDate, checkOutDate, guests);
             return Ok(rooms);
         }
         
@@ -89,13 +116,40 @@ public class RoomsController : ControllerBase
     [ProducesResponseType(403)]
     public async Task<ActionResult<IEnumerable<RoomResponse>>> GetByHotel(
         Guid hotelId,
-        [FromQuery] string? status = null)
+        [FromQuery] string? status = null,
+        [FromQuery] DateTime? checkInDate = null,
+        [FromQuery] DateTime? checkOutDate = null,
+        [FromQuery] short? guests = null)
     {
         // Verificar se tem acesso ao hotel
         if (!_currentUser.HasAccessToHotel(hotelId))
             return Forbid();
 
-        var rooms = await _roomService.GetRoomsByHotelAsync(hotelId, status);
+        // Validar que se uma data for fornecida, ambas devem ser fornecidas
+        if ((checkInDate.HasValue && !checkOutDate.HasValue) || (!checkInDate.HasValue && checkOutDate.HasValue))
+        {
+            return BadRequest(new { message = "Ambas as datas (checkInDate e checkOutDate) devem ser fornecidas juntas" });
+        }
+
+        // Validar que a data de check-out seja posterior à data de check-in
+        if (checkInDate.HasValue && checkOutDate.HasValue && checkOutDate.Value <= checkInDate.Value)
+        {
+            return BadRequest(new { message = "A data de check-out deve ser posterior à data de check-in" });
+        }
+
+        // Validar que guests seja positivo se fornecido
+        if (guests.HasValue && guests.Value <= 0)
+        {
+            return BadRequest(new { message = "O número de hóspedes (guests) deve ser maior que zero" });
+        }
+
+        // Se guests for fornecido, datas também devem ser fornecidas para calcular o preço
+        if (guests.HasValue && (!checkInDate.HasValue || !checkOutDate.HasValue))
+        {
+            return BadRequest(new { message = "Para calcular o preço por hóspedes, é necessário fornecer checkInDate e checkOutDate" });
+        }
+
+        var rooms = await _roomService.GetRoomsByHotelAsync(hotelId, status, checkInDate, checkOutDate, guests);
         return Ok(rooms);
     }
 

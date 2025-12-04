@@ -65,6 +65,9 @@ public class AuthController : ControllerBase
 
         try
         {
+            if (request.HotelId == null || request.HotelId == Guid.Empty)
+                request.HotelId = new Guid("7a326969-3bf6-40d9-96dc-1aecef585000");
+
             var result = await _guestRegistrationService.RegisterAsync(request);
             return Ok(result);
         }
@@ -72,7 +75,7 @@ public class AuthController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(500, new { message = "Erro interno ao registrar hóspede" });
         }

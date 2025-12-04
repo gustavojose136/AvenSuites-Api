@@ -63,11 +63,54 @@ public class RoomService : IRoomService
         return MapToResponse(room);
     }
 
-    public async Task<IEnumerable<RoomResponse>> GetRoomsByHotelAsync(Guid hotelId, string? status = null)
+    public async Task<IEnumerable<RoomResponse>> GetRoomsByHotelAsync(Guid hotelId, string? status = null, DateTime? checkInDate = null, DateTime? checkOutDate = null, short? guests = null)
     {
-        var rooms = string.IsNullOrEmpty(status)
-            ? await _roomRepository.GetByHotelIdAsync(hotelId)
-            : await _roomRepository.GetByStatusAsync(hotelId, status);
+        IEnumerable<AvenSuitesApi.Domain.Entities.Room> rooms;
+
+        // Se datas foram fornecidas, filtrar por disponibilidade
+        if (checkInDate.HasValue && checkOutDate.HasValue)
+        {
+            rooms = await _roomRepository.GetAvailableRoomsForPeriodAsync(hotelId, checkInDate.Value, checkOutDate.Value);
+            
+            // Aplicar filtro de status se fornecido
+            if (!string.IsNullOrEmpty(status))
+            {
+                rooms = rooms.Where(r => r.Status == status);
+            }
+        }
+        else
+        {
+            // Lógica original sem filtro de data
+            rooms = string.IsNullOrEmpty(status)
+                ? await _roomRepository.GetByHotelIdAsync(hotelId)
+                : await _roomRepository.GetByStatusAsync(hotelId, status);
+        }
+
+        // Se guests e datas foram fornecidos, calcular preços
+        if (guests.HasValue && guests.Value > 0 && checkInDate.HasValue && checkOutDate.HasValue)
+        {
+            var responses = new List<RoomResponse>();
+            
+            foreach (var room in rooms)
+            {
+                // Buscar RoomType com preços de ocupação
+                var roomType = await _roomTypeRepository.GetByIdWithOccupancyPricesAsync(room.RoomTypeId);
+                if (roomType == null)
+                    continue;
+
+                // Calcular preço por ocupação
+                var pricePerNight = GetPriceForOccupancy(roomType, guests.Value);
+                var totalPrice = CalculateTotalPrice(pricePerNight, checkInDate.Value, checkOutDate.Value);
+                
+                var response = MapToResponse(room);
+                response.PricePerNight = pricePerNight;
+                response.TotalPrice = totalPrice;
+                
+                responses.Add(response);
+            }
+            
+            return responses;
+        }
 
         return rooms.Select(MapToResponse);
     }
@@ -116,18 +159,36 @@ public class RoomService : IRoomService
             r.RoomType.CapacityAdults >= request.Adults &&
             r.RoomType.CapacityChildren >= request.Children);
 
-        return availableRooms.Select(room => new RoomAvailabilityResponse
+        var responses = new List<RoomAvailabilityResponse>();
+        
+        foreach (var room in availableRooms)
         {
-            RoomId = room.Id,
-            RoomNumber = room.RoomNumber,
-            RoomTypeId = room.RoomTypeId,
-            RoomTypeName = room.RoomType.Name,
-            CapacityAdults = room.RoomType.CapacityAdults,
-            CapacityChildren = room.RoomType.CapacityChildren,
-            BasePrice = room.RoomType.BasePrice,
-            TotalPrice = CalculateTotalPrice(room.RoomType.BasePrice, request.CheckInDate, request.CheckOutDate),
-            IsAvailable = true
-        });
+            // Buscar RoomType com preços de ocupação
+            var roomType = await _roomTypeRepository.GetByIdWithOccupancyPricesAsync(room.RoomTypeId);
+            if (roomType == null)
+                continue;
+
+            // Calcular ocupação total (adultos + crianças)
+            var totalOccupancy = (short)(request.Adults + request.Children);
+            
+            // Buscar preço por ocupação ou usar BasePrice como fallback
+            var pricePerNight = GetPriceForOccupancy(roomType, totalOccupancy);
+            
+            responses.Add(new RoomAvailabilityResponse
+            {
+                RoomId = room.Id,
+                RoomNumber = room.RoomNumber,
+                RoomTypeId = room.RoomTypeId,
+                RoomTypeName = room.RoomType.Name,
+                CapacityAdults = room.RoomType.CapacityAdults,
+                CapacityChildren = room.RoomType.CapacityChildren,
+                BasePrice = roomType.BasePrice,
+                TotalPrice = CalculateTotalPrice(pricePerNight, request.CheckInDate, request.CheckOutDate),
+                IsAvailable = true
+            });
+        }
+
+        return responses;
     }
 
     public async Task<bool> IsRoomAvailableAsync(Guid roomId, DateTime checkInDate, DateTime checkOutDate)
@@ -166,10 +227,25 @@ public class RoomService : IRoomService
         };
     }
 
-    private static decimal CalculateTotalPrice(decimal basePrice, DateTime checkIn, DateTime checkOut)
+    /// <summary>
+    /// Obtém o preço por noite baseado na ocupação.
+    /// Busca primeiro um preço específico para a ocupação no RoomTypeOccupancyPrice.
+    /// Se não encontrar, usa o BasePrice do RoomType.
+    /// </summary>
+    private static decimal GetPriceForOccupancy(RoomType roomType, short occupancy)
+    {
+        // Buscar preço específico para a ocupação
+        var occupancyPrice = roomType.OccupancyPrices?
+            .FirstOrDefault(op => op.Occupancy == occupancy);
+
+        // Se encontrar preço específico, usar ele; caso contrário, usar BasePrice
+        return occupancyPrice?.PricePerNight ?? roomType.BasePrice;
+    }
+
+    private static decimal CalculateTotalPrice(decimal pricePerNight, DateTime checkIn, DateTime checkOut)
     {
         var nights = (checkOut - checkIn).Days;
-        return basePrice * nights;
+        return pricePerNight * nights;
     }
 }
 

@@ -14,6 +14,7 @@ public class BookingService : IBookingService
     private readonly IHotelRepository _hotelRepository;
     private readonly IGuestRepository _guestRepository;
     private readonly IRoomRepository _roomRepository;
+    private readonly IRoomTypeRepository _roomTypeRepository;
     private readonly IRatePlanRepository _ratePlanRepository;
     private readonly IEmailService _emailService;
     private readonly IEmailTemplateService _emailTemplateService;
@@ -25,6 +26,7 @@ public class BookingService : IBookingService
         IHotelRepository hotelRepository,
         IGuestRepository guestRepository,
         IRoomRepository roomRepository,
+        IRoomTypeRepository roomTypeRepository,
         IRatePlanRepository ratePlanRepository,
         IEmailService emailService,
         IEmailTemplateService emailTemplateService,
@@ -35,6 +37,7 @@ public class BookingService : IBookingService
         _hotelRepository = hotelRepository;
         _guestRepository = guestRepository;
         _roomRepository = roomRepository;
+        _roomTypeRepository = roomTypeRepository;
         _ratePlanRepository = ratePlanRepository;
         _emailService = emailService;
         _emailTemplateService = emailTemplateService;
@@ -81,15 +84,42 @@ public class BookingService : IBookingService
             MainGuestId = mainGuest.Id,
             ChannelRef = request.ChannelRef,
             Notes = request.Notes,
-            TotalAmount = CalculateTotalFromRequest(request),
+            TotalAmount = 0, // Será calculado abaixo baseado na ocupação
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
+
+        // Calcular preços dos quartos baseado na ocupação antes de criar o booking
+        var calculatedPrices = new Dictionary<Guid, decimal>();
+        var totalOccupancy = (short)(request.Adults + request.Children);
+        var nights = (request.CheckOutDate - request.CheckInDate).Days;
+
+        foreach (var bookingRoomRequest in request.BookingRooms)
+        {
+            // Buscar RoomType com preços de ocupação
+            var roomType = await _roomTypeRepository.GetByIdWithOccupancyPricesAsync(bookingRoomRequest.RoomTypeId);
+            if (roomType == null)
+                return null; // RoomType não encontrado
+
+            // Calcular preço por noite baseado na ocupação
+            var pricePerNight = GetPriceForOccupancy(roomType, totalOccupancy);
+            
+            // Calcular preço total para o quarto (preço por noite × número de noites)
+            var totalPrice = CalculateTotalPrice(pricePerNight, request.CheckInDate, request.CheckOutDate);
+            
+            calculatedPrices[bookingRoomRequest.RoomId] = totalPrice;
+        }
+
+        // Atualizar TotalAmount do booking com os preços calculados
+        booking.TotalAmount = calculatedPrices.Values.Sum();
 
         var createdBooking = await _bookingRepository.AddAsync(booking);
         
         foreach (var bookingRoomRequest in request.BookingRooms)
         {
+            // Usar o preço calculado ao invés do preço do request
+            var calculatedPrice = calculatedPrices[bookingRoomRequest.RoomId];
+            
             var bookingRoom = new AvenSuitesApi.Domain.Entities.BookingRoom
             {
                 Id = Guid.NewGuid(),
@@ -97,7 +127,7 @@ public class BookingService : IBookingService
                 RoomId = bookingRoomRequest.RoomId,
                 RoomTypeId = bookingRoomRequest.RoomTypeId,
                 RatePlanId = bookingRoomRequest.RatePlanId,
-                PriceTotal = bookingRoomRequest.PriceTotal,
+                PriceTotal = calculatedPrice, // Usar preço calculado
                 Notes = bookingRoomRequest.Notes,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -110,7 +140,12 @@ public class BookingService : IBookingService
         
         var response = MapToResponse(createdBooking);
         
-        _ = Task.Run(async () => await SendBookingConfirmationEmailAsync(createdBooking));
+        // Enviar emails para hóspede e hotel em background
+        _ = Task.Run(async () => 
+        {
+            await SendBookingConfirmationEmailAsync(createdBooking);
+            await SendHotelBookingNotificationEmailAsync(createdBooking);
+        });
         
         return response;
     }
@@ -212,7 +247,12 @@ public class BookingService : IBookingService
         await RegisterStatusChangeAsync(booking.Id, oldStatus, "CANCELLED", reason);
         await _bookingRepository.UpdateAsync(booking);
         
-        _ = Task.Run(async () => await SendBookingCancellationEmailAsync(booking, reason));
+        // Enviar emails para hóspede e hotel em background
+        _ = Task.Run(async () => 
+        {
+            await SendBookingCancellationEmailAsync(booking, reason);
+            await SendHotelBookingCancellationEmailAsync(booking, reason);
+        });
         
         return true;
     }
@@ -230,7 +270,12 @@ public class BookingService : IBookingService
         await RegisterStatusChangeAsync(booking.Id, oldStatus, "CONFIRMED", "Reserva confirmada via API");
         await _bookingRepository.UpdateAsync(booking);
         
-        _ = Task.Run(async () => await SendBookingConfirmedEmailAsync(booking));
+        // Enviar emails para hóspede e hotel em background
+        _ = Task.Run(async () => 
+        {
+            await SendBookingConfirmedEmailAsync(booking);
+            await SendHotelBookingConfirmedEmailAsync(booking);
+        });
         
         return true;
     }
@@ -349,8 +394,34 @@ public class BookingService : IBookingService
     
     private static decimal CalculateTotalFromRequest(BookingCreateRequest request)
     {
+        // Este método não é mais usado, mas mantido para compatibilidade
+        // O cálculo agora é feito no CreateBookingAsync usando ocupação
         var days = (request.CheckOutDate - request.CheckInDate).Days;
         return request.BookingRooms.Sum(br => br.PriceTotal) * days;
+    }
+
+    /// <summary>
+    /// Obtém o preço por noite baseado na ocupação.
+    /// Busca primeiro um preço específico para a ocupação no RoomTypeOccupancyPrice.
+    /// Se não encontrar, usa o BasePrice do RoomType.
+    /// </summary>
+    private static decimal GetPriceForOccupancy(RoomType roomType, short occupancy)
+    {
+        // Buscar preço específico para a ocupação
+        var occupancyPrice = roomType.OccupancyPrices?
+            .FirstOrDefault(op => op.Occupancy == occupancy);
+
+        // Se encontrar preço específico, usar ele; caso contrário, usar BasePrice
+        return occupancyPrice?.PricePerNight ?? roomType.BasePrice;
+    }
+
+    /// <summary>
+    /// Calcula o preço total baseado no preço por noite e no período de estadia.
+    /// </summary>
+    private static decimal CalculateTotalPrice(decimal pricePerNight, DateTime checkIn, DateTime checkOut)
+    {
+        var nights = (checkOut - checkIn).Days;
+        return pricePerNight * nights;
     }
     
     private async Task SendBookingConfirmationEmailAsync(Domain.Entities.Booking booking)
@@ -517,6 +588,194 @@ public class BookingService : IBookingService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro ao enviar e-mail de cancelamento de reserva para Booking: {BookingId}",
+                booking.Id);
+        }
+    }
+
+    /// <summary>
+    /// Envia e-mail de notificação de nova reserva para o hotel
+    /// </summary>
+    private async Task SendHotelBookingNotificationEmailAsync(Domain.Entities.Booking booking)
+    {
+        try
+        {
+            var bookingWithDetails = await _bookingRepository.GetByIdWithDetailsAsync(booking.Id);
+            if (bookingWithDetails == null)
+                return;
+
+            var hotel = await _hotelRepository.GetByIdAsync(bookingWithDetails.HotelId);
+            if (hotel == null || string.IsNullOrWhiteSpace(hotel.Email))
+                return;
+
+            var guest = await _guestRepository.GetByIdWithPiiAsync(bookingWithDetails.MainGuestId);
+            if (guest?.GuestPii == null)
+                return;
+
+            var nights = (bookingWithDetails.CheckOutDate - bookingWithDetails.CheckInDate).Days;
+            var rooms = bookingWithDetails.BookingRooms
+                .Where(br => br.Room != null && br.RoomType != null)
+                .GroupBy(br => br.RoomId)
+                .Select(g => g.First())
+                .Select(br => new BookingRoomInfo
+                {
+                    RoomNumber = br.Room!.RoomNumber,
+                    RoomTypeName = br.RoomType!.Name ?? "",
+                    PriceTotal = br.PriceTotal
+                })
+                .ToList();
+
+            if (rooms.Count == 0)
+                return;
+
+            var emailBody = _emailTemplateService.GenerateHotelBookingNotificationEmail(
+                hotelName: hotel.Name,
+                bookingCode: bookingWithDetails.Code,
+                guestName: guest.GuestPii.FullName ?? "Hóspede",
+                guestEmail: guest.GuestPii.Email ?? "",
+                guestPhone: guest.GuestPii.PhoneE164,
+                checkInDate: bookingWithDetails.CheckInDate,
+                checkOutDate: bookingWithDetails.CheckOutDate,
+                nights: nights,
+                adults: bookingWithDetails.Adults,
+                children: bookingWithDetails.Children,
+                totalAmount: bookingWithDetails.TotalAmount,
+                currency: bookingWithDetails.Currency,
+                rooms: rooms,
+                notes: bookingWithDetails.Notes,
+                channelRef: bookingWithDetails.ChannelRef);
+
+            await _emailService.SendEmailAsync(
+                to: hotel.Email,
+                subject: $"Nova Reserva Recebida - {bookingWithDetails.Code}",
+                body: emailBody,
+                isHtml: true,
+                cc: null,
+                bcc: null);
+
+            _logger.LogInformation("E-mail de notificação de nova reserva enviado para hotel {HotelEmail}, Booking: {BookingCode}",
+                hotel.Email, bookingWithDetails.Code);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao enviar e-mail de notificação de nova reserva para hotel, Booking: {BookingId}",
+                booking.Id);
+        }
+    }
+
+    /// <summary>
+    /// Envia e-mail de notificação de confirmação de reserva para o hotel
+    /// </summary>
+    private async Task SendHotelBookingConfirmedEmailAsync(Domain.Entities.Booking booking)
+    {
+        try
+        {
+            var bookingWithDetails = await _bookingRepository.GetByIdWithDetailsAsync(booking.Id);
+            if (bookingWithDetails == null)
+                return;
+
+            var hotel = await _hotelRepository.GetByIdAsync(bookingWithDetails.HotelId);
+            if (hotel == null || string.IsNullOrWhiteSpace(hotel.Email))
+                return;
+
+            var guest = await _guestRepository.GetByIdWithPiiAsync(bookingWithDetails.MainGuestId);
+            if (guest?.GuestPii == null)
+                return;
+
+            var nights = (bookingWithDetails.CheckOutDate - bookingWithDetails.CheckInDate).Days;
+            var rooms = bookingWithDetails.BookingRooms
+                .Where(br => br.Room != null && br.RoomType != null)
+                .GroupBy(br => br.RoomId)
+                .Select(g => g.First())
+                .Select(br => new BookingRoomInfo
+                {
+                    RoomNumber = br.Room!.RoomNumber,
+                    RoomTypeName = br.RoomType!.Name ?? "",
+                    PriceTotal = br.PriceTotal
+                })
+                .ToList();
+
+            if (rooms.Count == 0)
+                return;
+
+            var emailBody = _emailTemplateService.GenerateHotelBookingNotificationEmail(
+                hotelName: hotel.Name,
+                bookingCode: bookingWithDetails.Code,
+                guestName: guest.GuestPii.FullName ?? "Hóspede",
+                guestEmail: guest.GuestPii.Email ?? "",
+                guestPhone: guest.GuestPii.PhoneE164,
+                checkInDate: bookingWithDetails.CheckInDate,
+                checkOutDate: bookingWithDetails.CheckOutDate,
+                nights: nights,
+                adults: bookingWithDetails.Adults,
+                children: bookingWithDetails.Children,
+                totalAmount: bookingWithDetails.TotalAmount,
+                currency: bookingWithDetails.Currency,
+                rooms: rooms,
+                notes: $"Reserva CONFIRMADA - {bookingWithDetails.Notes}",
+                channelRef: bookingWithDetails.ChannelRef);
+
+            await _emailService.SendEmailAsync(
+                to: hotel.Email,
+                subject: $"Reserva Confirmada - {bookingWithDetails.Code}",
+                body: emailBody,
+                isHtml: true,
+                cc: null,
+                bcc: null);
+
+            _logger.LogInformation("E-mail de notificação de reserva confirmada enviado para hotel {HotelEmail}, Booking: {BookingCode}",
+                hotel.Email, bookingWithDetails.Code);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao enviar e-mail de notificação de reserva confirmada para hotel, Booking: {BookingId}",
+                booking.Id);
+        }
+    }
+
+    /// <summary>
+    /// Envia e-mail de notificação de cancelamento de reserva para o hotel
+    /// </summary>
+    private async Task SendHotelBookingCancellationEmailAsync(Domain.Entities.Booking booking, string? reason = null)
+    {
+        try
+        {
+            var bookingWithDetails = await _bookingRepository.GetByIdWithDetailsAsync(booking.Id);
+            if (bookingWithDetails == null)
+                return;
+
+            var hotel = await _hotelRepository.GetByIdAsync(bookingWithDetails.HotelId);
+            if (hotel == null || string.IsNullOrWhiteSpace(hotel.Email))
+                return;
+
+            var guest = await _guestRepository.GetByIdWithPiiAsync(bookingWithDetails.MainGuestId);
+            if (guest?.GuestPii == null)
+                return;
+
+            var emailBody = _emailTemplateService.GenerateHotelBookingCancellationEmail(
+                hotelName: hotel.Name,
+                bookingCode: bookingWithDetails.Code,
+                guestName: guest.GuestPii.FullName ?? "Hóspede",
+                guestEmail: guest.GuestPii.Email ?? "",
+                checkInDate: bookingWithDetails.CheckInDate,
+                checkOutDate: bookingWithDetails.CheckOutDate,
+                totalAmount: bookingWithDetails.TotalAmount,
+                currency: bookingWithDetails.Currency,
+                reason: reason);
+
+            await _emailService.SendEmailAsync(
+                to: hotel.Email,
+                subject: $"Cancelamento de Reserva - {bookingWithDetails.Code}",
+                body: emailBody,
+                isHtml: true,
+                cc: null,
+                bcc: null);
+
+            _logger.LogInformation("E-mail de notificação de cancelamento enviado para hotel {HotelEmail}, Booking: {BookingCode}",
+                hotel.Email, bookingWithDetails.Code);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao enviar e-mail de notificação de cancelamento para hotel, Booking: {BookingId}",
                 booking.Id);
         }
     }
