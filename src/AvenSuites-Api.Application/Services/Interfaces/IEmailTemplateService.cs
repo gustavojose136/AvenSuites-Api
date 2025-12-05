@@ -11,6 +11,22 @@ public interface IEmailTemplateService
     string GenerateWelcomeEmail(string guestName, string hotelName);
 
     /// <summary>
+    /// Gera o template HTML de reserva criada aguardando aprovação (status PENDING)
+    /// </summary>
+    string GenerateBookingPendingEmail(
+        string guestName,
+        string hotelName,
+        string bookingCode,
+        DateTime checkInDate,
+        DateTime checkOutDate,
+        int nights,
+        decimal totalAmount,
+        string currency,
+        List<BookingRoomInfo> rooms,
+        string? hotelAddress = null,
+        string? hotelPhone = null);
+
+    /// <summary>
     /// Gera o template HTML de confirmação de reserva (ticket)
     /// </summary>
     string GenerateBookingConfirmationEmail(
