@@ -63,6 +63,171 @@ public class EmailTemplateService : IEmailTemplateService
 </html>";
     }
 
+    public string GenerateBookingPendingEmail(
+        string guestName,
+        string hotelName,
+        string bookingCode,
+        DateTime checkInDate,
+        DateTime checkOutDate,
+        int nights,
+        decimal totalAmount,
+        string currency,
+        List<BookingRoomInfo> rooms,
+        string? hotelAddress = null,
+        string? hotelPhone = null)
+    {
+        var roomsHtml = string.Join("", rooms.Select((room, index) => $@"
+            <tr style=""border-bottom: 1px solid #e5e7eb;"">
+                <td style=""padding: 16px 0; color: #111827; font-size: 15px; font-weight: 500;"">
+                    Quarto {room.RoomNumber}<br>
+                    <span style=""color: #6b7280; font-size: 13px; font-weight: 400;"">{room.RoomTypeName}</span>
+                </td>
+                <td style=""padding: 16px 0; text-align: right; color: #111827; font-size: 15px; font-weight: 600;"">
+                    {FormatCurrency(totalAmount / rooms.Count, currency)}
+                </td>
+            </tr>"));
+
+        return $@"
+<!DOCTYPE html>
+<html lang=""pt-BR"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Reserva Criada - {hotelName}</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6; line-height: 1.6; color: #111827; -webkit-font-smoothing: antialiased; }}
+        .email-wrapper {{ background-color: #f3f4f6; padding: 20px 0; }}
+        .container {{ max-width: 650px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07); }}
+        .header {{ background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 48px 40px; text-align: center; }}
+        .header h1 {{ font-size: 28px; font-weight: 600; letter-spacing: -0.5px; color: #ffffff; margin-bottom: 8px; }}
+        .header p {{ color: #fef3c7; font-size: 14px; font-weight: 400; letter-spacing: 0.3px; }}
+        .content {{ padding: 48px 40px; }}
+        .greeting {{ font-size: 22px; color: #111827; margin-bottom: 24px; font-weight: 600; }}
+        .intro-text {{ color: #4b5563; margin-bottom: 32px; font-size: 15px; line-height: 1.7; }}
+        .pending-banner {{ background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 24px; border-radius: 6px; text-align: center; color: white; margin-bottom: 32px; }}
+        .pending-banner h2 {{ font-size: 20px; margin-bottom: 6px; font-weight: 600; }}
+        .pending-banner p {{ font-size: 14px; opacity: 0.95; }}
+        .booking-code-box {{ background-color: #f9fafb; padding: 28px; text-align: center; margin: 32px 0; border: 2px solid #e5e7eb; border-radius: 6px; }}
+        .booking-code-label {{ font-size: 11px; color: #6b7280; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 12px; font-weight: 500; }}
+        .booking-code-value {{ font-size: 32px; font-weight: 700; letter-spacing: 4px; color: #111827; font-family: 'Courier New', monospace; }}
+        .info-section {{ margin: 32px 0; }}
+        .info-table {{ width: 100%; border-collapse: collapse; }}
+        .info-row {{ border-bottom: 1px solid #e5e7eb; }}
+        .info-row:last-child {{ border-bottom: none; }}
+        .info-label {{ padding: 14px 0; color: #6b7280; font-size: 14px; font-weight: 500; width: 40%; }}
+        .info-value {{ padding: 14px 0; color: #111827; font-size: 15px; font-weight: 600; text-align: right; }}
+        .rooms-section {{ margin: 40px 0; }}
+        .section-title {{ font-size: 14px; color: #374151; margin-bottom: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .rooms-table {{ width: 100%; border-collapse: collapse; background-color: #f9fafb; border-radius: 6px; overflow: hidden; }}
+        .rooms-table tr:last-child {{ border-bottom: none; }}
+        .rooms-table td {{ padding: 16px 20px; }}
+        .total-section {{ background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 32px; margin: 40px 0; text-align: center; border-radius: 6px; }}
+        .total-label {{ font-size: 12px; color: #fef3c7; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 12px; font-weight: 500; }}
+        .total-value {{ font-size: 36px; font-weight: 700; color: #ffffff; }}
+        .location-box {{ background-color: #f9fafb; padding: 24px; margin: 32px 0; border-left: 4px solid #f59e0b; border-radius: 4px; }}
+        .location-title {{ font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .location-content {{ color: #4b5563; line-height: 1.8; font-size: 14px; }}
+        .notice-box {{ background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 20px; margin: 32px 0; border-radius: 4px; }}
+        .notice-title {{ font-size: 13px; font-weight: 600; color: #92400e; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .notice-text {{ color: #78350f; font-size: 14px; line-height: 1.7; }}
+        .footer {{ background-color: #1f2937; padding: 40px; text-align: center; color: #9ca3af; font-size: 13px; }}
+        .footer p {{ margin: 6px 0; }}
+        .footer strong {{ color: #ffffff; font-weight: 600; }}
+        .footer-copyright {{ margin-top: 24px; padding-top: 24px; border-top: 1px solid #374151; font-size: 11px; color: #6b7280; }}
+    </style>
+</head>
+<body>
+    <div class=""email-wrapper"">
+        <div class=""container"">
+            <div class=""header"">
+                <h1>Reserva Criada</h1>
+                <p>{hotelName}</p>
+            </div>
+            
+            <div class=""content"">
+                <div class=""greeting"">Prezado(a) {guestName},</div>
+                
+                <div class=""intro-text"">
+                    Sua solicitação de reserva foi recebida com sucesso e está aguardando aprovação do hotel. 
+                    Você receberá uma confirmação assim que sua reserva for aprovada.
+                </div>
+                
+                <div class=""pending-banner"">
+                    <h2>Reserva Aguardando Aprovação</h2>
+                    <p>Sua reserva foi criada e está sendo analisada pelo hotel</p>
+                </div>
+                
+                <div class=""booking-code-box"">
+                    <div class=""booking-code-label"">Código da Reserva</div>
+                    <div class=""booking-code-value"">{bookingCode}</div>
+                </div>
+                
+                <div class=""info-section"">
+                    <table class=""info-table"">
+                        <tr class=""info-row"">
+                            <td class=""info-label"">Data de Check-in</td>
+                            <td class=""info-value"">{checkInDate:dd/MM/yyyy} às 14:00</td>
+                        </tr>
+                        <tr class=""info-row"">
+                            <td class=""info-label"">Data de Check-out</td>
+                            <td class=""info-value"">{checkOutDate:dd/MM/yyyy} às 12:00</td>
+                        </tr>
+                        <tr class=""info-row"">
+                            <td class=""info-label"">Período de Estadia</td>
+                            <td class=""info-value"">{nights} {(nights == 1 ? "noite" : "noites")}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class=""rooms-section"">
+                    <div class=""section-title"">Quartos Solicitados</div>
+                    <table class=""rooms-table"">
+                        {roomsHtml}
+                    </table>
+                </div>
+                
+                <div class=""total-section"">
+                    <div class=""total-label"">Valor Total da Reserva</div>
+                    <div class=""total-value"">{FormatCurrency(totalAmount, currency)}</div>
+                </div>
+                
+                {(string.IsNullOrWhiteSpace(hotelAddress) ? "" : $@"
+                <div class=""location-box"">
+                    <div class=""location-title"">Informações de Localização</div>
+                    <div class=""location-content"">
+                        <strong>{hotelName}</strong><br>
+                        {hotelAddress}
+                        {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<br>Telefone: {hotelPhone}")}
+                    </div>
+                </div>")}
+                
+                <div class=""notice-box"">
+                    <div class=""notice-title"">Próximos Passos</div>
+                    <div class=""notice-text"">
+                        • Sua reserva está aguardando aprovação do hotel<br>
+                        • Você receberá um e-mail de confirmação assim que sua reserva for aprovada<br>
+                        • O tempo de resposta pode variar conforme a política do hotel<br>
+                        • Em caso de dúvidas, entre em contato conosco através dos canais oficiais
+                    </div>
+                </div>
+            </div>
+            
+            <div class=""footer"">
+                <p><strong>{hotelName}</strong></p>
+                {(string.IsNullOrWhiteSpace(hotelAddress) ? "" : $@"<p>{hotelAddress}</p>")}
+                {(string.IsNullOrWhiteSpace(hotelPhone) ? "" : $@"<p>Telefone: {hotelPhone}</p>")}
+                <div class=""footer-copyright"">
+                    <p>© {DateTime.Now.Year} {hotelName}. Todos os direitos reservados.</p>
+                    <p style=""margin-top: 8px;"">Este é um e-mail automático. Por favor, não responda diretamente a esta mensagem.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>";
+    }
+
     public string GenerateBookingConfirmationEmail(
         string guestName,
         string hotelName,

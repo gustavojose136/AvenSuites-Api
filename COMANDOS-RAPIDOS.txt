@@ -82,3 +82,4 @@ Para verificar a porcentagem exata, abra o arquivo XML de cobertura
 e procure pelo atributo "line-rate" ou use o ReportGenerator.
 
 
+
